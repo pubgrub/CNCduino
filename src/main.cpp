@@ -41,6 +41,7 @@ const int X_ERR = 1;
 const int Y_ERR = 2;
 const int Z_ERR = 4;
 
+// LED ************************
 
 struct Led {
   int pin;
@@ -50,7 +51,6 @@ struct Led {
   int position; // wo in pattern
   unsigned long endtime; // wann weiter im pattern
 };
-
 
 int OneShortBlinks[20] = { 800, 200};
 int TwoShortBlinks[20] = { 600, 200, 200, 200};
@@ -72,9 +72,25 @@ int *Blinks[8] = {  Xyz_Blinks_0,  Xyz_Blinks_1,  Xyz_Blinks_2,  Xyz_Blinks_12,
 
 Led Xyz_err_led;
 
-Bounce Io_on_button = Bounce();
-Bounce Io_off_button = Bounce();
-Bounce Xyz_reset_button = Bounce();
+// BUTTONS ***********************
+
+struct Button {
+  Bounce bounce;
+  int status; // OFF, ON
+  int newStatus; // OFF, ON
+};
+
+Button IoOnButton;
+Button IoOffButton;
+Button XyzResetButton;
+
+// INPUTS except Buttons
+
+struct Input {
+  int status; // OFF, ON
+  int newStatus; //OFF, ON
+};
+
 
 int Io_status;
 int Fu_err_status;
@@ -185,6 +201,7 @@ void setup() {
       Serial.println();
     }
 
+// Setup Pins as INPUT or OUTPUT
 
     pinMode( IO_ON_LED, OUTPUT);
     pinMode( PH_ERR_LED, OUTPUT);
@@ -214,11 +231,17 @@ void setup() {
     Xyz_err_led.status = OFF;
     Xyz_err_led.pin = XYZ_ERR_LED;
 
-    Io_on_button.attach(IO_ON_SW);
-    Io_on_button.interval(5);
+    IoOnButton.bounce = Bounce();
+    IoOnButton.bounce.attach(IO_ON_SW);
+    IoOnButton.bounce.interval(5);
 
-    Io_off_button.attach(IO_OFF_SW);
-    Io_on_button.interval(5);
+    IoOffButton.bounce = Bounce();
+    IoOffButton.bounce.attach(IO_OFF_SW);
+    IoOffButton.bounce.interval(5);
+
+    XyzResetButton.bounce = Bounce();
+    XyzResetButton.bounce.attach( XYZ_RESET_SW);
+    XyzResetButton.bounce.interval(5);
 
     Serial.print( "Start\n");
 
@@ -243,15 +266,15 @@ void loop() {
 
   // Update Status der Buttons
 
-  Io_on_button.update();
-  Io_off_button.update();
-  Xyz_reset_button.update();
+  IoOnButton.bounce.update();
+  IoOffButton.bounce.update();
+  XyzResetButton.bounce.update();
 
   // lese Status der Buttons
 
-  Io_on_button_status = Io_on_button.read();
-  Io_off_button_status = Io_off_button.read();
-  Xyz_reset_button_status = Xyz_reset_button.read();
+  IoOnButton.newStatus = IoOnButton.bounce.read();
+  IoOffButton.newStatus = IoOffButton.bounce.read();
+  XyzResetButton.newStatus = XyzResetButton.bounce.read();
 
 
 
