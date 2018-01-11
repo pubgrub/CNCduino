@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <Controllino.h>
 #include <Bounce2.h>
+#include <button.cpp>
+#include <led.h>
 
 // LEDs definieren
 
@@ -43,42 +45,13 @@ const int Z_ERR = 4;
 
 // LED ************************
 
-struct Led {
-  int pin;
-  int status; // OFF, ON, BLINK
-  int mode; //Blinkmode
-  int (*pattern)[20];
-  int position; // wo in pattern
-  unsigned long endtime; // wann weiter im pattern
-};
 
-int OneShortBlinks[20] = { 800, 200};
-int TwoShortBlinks[20] = { 600, 200, 200, 200};
-int ThreeShortBlinks[20] = { 600, 200, 200, 200, 200, 200};
-
-int OneLongBlink[20] = { 500, 500};
-
-int Xyz_Blinks_0[20] = {};
-int Xyz_Blinks_1[20] = { 800, 200};
-int Xyz_Blinks_2[20] = { 800, 200, 200, 200};
-int Xyz_Blinks_3[20] = { 800, 200, 200, 200, 200, 200};
-int Xyz_Blinks_12[20] = { 800, 200,     800, 200, 200, 200};
-int Xyz_Blinks_13[20] = { 800, 200,     800, 200, 200, 200, 200, 200};
-int Xyz_Blinks_23[20] = { 800, 200, 200, 200,     800, 200, 200, 200, 200, 200};
-int Xyz_Blinks_123[20] = { 800, 200,     800, 200, 200, 200,     800, 200, 200, 200, 200, 200};
-
-int *Blinks[8] = {  Xyz_Blinks_0,  Xyz_Blinks_1,  Xyz_Blinks_2,  Xyz_Blinks_12,
-                    Xyz_Blinks_3,  Xyz_Blinks_13, Xyz_Blinks_23, Xyz_Blinks_123 };
 
 Led Xyz_err_led;
 
 // BUTTONS ***********************
 
-struct Button {
-  Bounce bounce;
-  int status; // OFF, ON
-  int newStatus; // OFF, ON
-};
+
 
 Button IoOnButton;
 Button IoOffButton;
@@ -88,7 +61,7 @@ Button XyzResetButton;
 
 struct Input {
   int status; // OFF, ON
-  int newStatus; //OFF, ON
+  int oldStatus; //OFF, ON
 };
 
 
@@ -98,9 +71,6 @@ int Ph_err_status;
 int Notaus_err_status;
 int Xyz_err_status;
 
-int Io_on_button_status;
-int Io_off_button_status;
-int Xyz_reset_button_status;
 
 void ledUpdate( Led &led);
 void ledBlinkStart( Led &led);
@@ -172,7 +142,7 @@ void xyzStatusUpdate() {
 
     int old_status = Xyz_err_led.mode;
     if( old_status != Xyz_err_status) {
-      Xyz_err_led.pattern = (int)Blinks[Xyz_err_status]  ;
+      Xyz_err_led.pattern = (int(*)[20])Blinks[Xyz_err_status]  ;
       Xyz_err_led.mode = Xyz_err_status;
       ledBlinkStart(Xyz_err_led);
     }
@@ -228,8 +198,12 @@ void setup() {
     pinMode( LIMIT_ERR_RLY, OUTPUT);
     pinMode( LIMIT_OVRD_RLY, OUTPUT);
 
+// LEDs initialisieren
+
     Xyz_err_led.status = OFF;
     Xyz_err_led.pin = XYZ_ERR_LED;
+
+// Buttons initialisieren
 
     IoOnButton.bounce = Bounce();
     IoOnButton.bounce.attach(IO_ON_SW);
@@ -272,25 +246,14 @@ void loop() {
 
   // lese Status der Buttons
 
-  IoOnButton.newStatus = IoOnButton.bounce.read();
-  IoOffButton.newStatus = IoOffButton.bounce.read();
-  XyzResetButton.newStatus = XyzResetButton.bounce.read();
+  IoOnButton.status = IoOnButton.bounce.read();
+  IoOffButton.status = IoOffButton.bounce.read();
+  XyzResetButton.status = XyzResetButton.bounce.read();
 
 
 
   ledUpdate(Xyz_err_led);
 
-  if( Io_on_button_status) {
-    Io_status = 1;
-  }
-
-  if ( ! Io_off_button_status) {
-    Io_status = 0;
-  }
-
-  if (  Xyz_reset_button_status) {
-
-  }
 
 
   fuStatusUpdate();
