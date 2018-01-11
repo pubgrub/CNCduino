@@ -42,6 +42,8 @@ const int Z_ERR = 4;
 
 // LED ************************
 
+extern int *Blinks[8];
+
 const int OFF = 0;
 const int ON = 1;
 
