@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <Controllino.h>
 #include <Bounce2.h>
-#include <button.cpp>
 #include <led.h>
+#include <button.h>
 
 // LEDs definieren
 
@@ -35,9 +35,6 @@
 #define LIMIT_ERR_RLY CONTROLLINO_R15
 #define LIMIT_OVRD_RLY CONTROLLINO_R13
 
-const int OFF = 0;
-const int ON = 1;
-const int BLINK = 2;
 
 const int X_ERR = 1;
 const int Y_ERR = 2;
@@ -45,7 +42,8 @@ const int Z_ERR = 4;
 
 // LED ************************
 
-
+const int OFF = 0;
+const int ON = 1;
 
 Led Xyz_err_led;
 
@@ -72,8 +70,7 @@ int Notaus_err_status;
 int Xyz_err_status;
 
 
-void ledUpdate( Led &led);
-void ledBlinkStart( Led &led);
+
 void ioStatusUpdate( int status);
 void fuStatusUpdate();
 void phStatusUpdate();
@@ -81,36 +78,7 @@ void notausStatusUpdate();
 void xyzStatusUpdate();
 
 
-void ledUpdate( Led &led) {
-  switch( led.status) {
-    case ON:
-      digitalWrite( led.pin, HIGH);
-      break;
-    case BLINK:
-      if (millis() >= led.endtime) {
-        led.position++;
-        if( (*led.pattern)[led.position] == 0)
-          led.position = 0;
-        led.endtime += (*led.pattern)[led.position];
-        if( led.position % 2 == 0)
-          digitalWrite( led.pin, HIGH);
-        else
-          digitalWrite( led.pin, LOW);
-      }
-      break;
-    case OFF:
-      digitalWrite( led.pin, LOW);
-      break;
-  }
-}
 
-
-void ledBlinkStart( Led &led) {
-  led.status = BLINK;
-  led.position = -1;
-  led.endtime = millis();
-  ledUpdate(led);
-}
 
 void ioStatusUpdate( int status){
   digitalWrite( IO_ON_LED, status);
