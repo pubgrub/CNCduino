@@ -1,7 +1,7 @@
 #ifndef Led_h
 #define Led_h
 
-class Led {
+struct Led {
   int pin;
   int status; // OFF, ON, BLINK
   int oldStatus;
@@ -10,12 +10,6 @@ class Led {
   int (*pattern)[20];
   int position; // wo in pattern
   unsigned long endtime; // wann weiter im pattern
-
-public:
-  Led( int p);
-  void update();
-  void blinkStart();
-
 };
 
 const int LED_OFF = 0;
@@ -39,5 +33,7 @@ extern int Xyz_Blinks_123[20];
 
 extern int *Blinks[8];
 
+void ledUpdate( Led &led);
+void ledBlinkStart( Led &led);
 
 #endif

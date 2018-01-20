@@ -1,5 +1,5 @@
 #include <arduino.h>
-#include <Led.h>
+#include <led.h>
 
 int OneShortBlinks[20] = { 800, 200};
 int TwoShortBlinks[20] = { 600, 200, 200, 200};
@@ -21,38 +21,33 @@ int *Blinks[8] = {  Xyz_Blinks_0,  Xyz_Blinks_1,  Xyz_Blinks_2,  Xyz_Blinks_12,
                   Xyz_Blinks_3,  Xyz_Blinks_13, Xyz_Blinks_23, Xyz_Blinks_123 };;
 
 
-Led::Led( int p){
-
-
-}
-
-void Led::update() {
-  switch( status) {
+void ledUpdate( Led &led) {
+  switch( led.status) {
     case LED_ON:
-      digitalWrite( pin, HIGH);
+      digitalWrite( led.pin, HIGH);
       break;
     case LED_BLINK:
-      if (millis() >= endtime) {
-        position++;
-        if( (*pattern)[position] == 0)
-          position = 0;
-        endtime += (*pattern)[position];
-        if( position % 2 == 0)
-          digitalWrite( pin, HIGH);
+      if (millis() >= led.endtime) {
+        led.position++;
+        if( (*led.pattern)[led.position] == 0)
+          led.position = 0;
+        led.endtime += (*led.pattern)[led.position];
+        if( led.position % 2 == 0)
+          digitalWrite( led.pin, HIGH);
         else
-          digitalWrite( pin, LOW);
+          digitalWrite( led.pin, LOW);
       }
       break;
     case LED_OFF:
-      digitalWrite( pin, LOW);
+      digitalWrite( led.pin, LOW);
       break;
   }
 }
 
 
-void Led::blinkStart() {
-  status = LED_BLINK;
-  position = -1;
-  endtime = millis();
-  update();
+void ledBlinkStart( Led &led) {
+  led.status = LED_BLINK;
+  led.position = -1;
+  led.endtime = millis();
+  ledUpdate(led);
 }
