@@ -3,7 +3,8 @@
 #ifndef BUTTON_H
 #define BUTTON_H
 
-
+#define BUTTON_ON 1
+#define BUTTON_OFF 0
 
 // struct Button {
 //   Bounce bounce;
@@ -20,8 +21,11 @@ class Button {
 public:
   Button( int input);
   int getStatus();
-  void update();
-  
+  int update();
+  bool statusChanged();
+  bool statusChangedOn();
+  bool statusChangedOff();
+
 
 };
 
