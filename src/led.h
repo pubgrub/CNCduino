@@ -1,6 +1,11 @@
 #ifndef Led_h
 #define Led_h
 
+#define LED_OFF 0
+#define LED_ON 1
+#define LED_BLINK 2
+
+
 class Led {
   int pin;
   int status; // OFF, ON, BLINK
@@ -18,9 +23,6 @@ public:
 
 };
 
-const int LED_OFF = 0;
-const int LED_ON = 1;
-const int LED_BLINK = 2;
 
 extern int OneShortBlinks[20];
 extern int TwoShortBlinks[20];

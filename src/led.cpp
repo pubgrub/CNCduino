@@ -22,7 +22,10 @@ int *Blinks[8] = {  Xyz_Blinks_0,  Xyz_Blinks_1,  Xyz_Blinks_2,  Xyz_Blinks_12,
 
 
 Led::Led( int p){
-
+  pin =p;
+  status = LED_OFF;
+  oldStatus = LED_OFF;
+  
 
 }
 
