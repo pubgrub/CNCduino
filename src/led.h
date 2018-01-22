@@ -1,3 +1,5 @@
+#include <LedList.h>
+
 #ifndef Led_h
 #define Led_h
 
@@ -9,18 +11,16 @@
 class Led {
   int pin;
   int status; // OFF, ON, BLINK
-  int oldStatus;
-  int mode; //Blinkmode
-  int oldMode;
   int (*pattern)[20];
   int position; // wo in pattern
   unsigned long endtime; // wann weiter im pattern
+  static LedList ledList;
 
 public:
   Led( int p);
   void update();
-  void blinkStart();
-
+  void setPattern( int (*pattern)[20]);
+  void setStatus( int s);
 };
 
 

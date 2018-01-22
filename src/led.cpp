@@ -1,5 +1,6 @@
 #include <arduino.h>
 #include <Led.h>
+#include <LedList.h>
 
 int OneShortBlinks[20] = { 800, 200};
 int TwoShortBlinks[20] = { 600, 200, 200, 200};
@@ -24,9 +25,20 @@ int *Blinks[8] = {  Xyz_Blinks_0,  Xyz_Blinks_1,  Xyz_Blinks_2,  Xyz_Blinks_12,
 Led::Led( int p){
   pin =p;
   status = LED_OFF;
-  oldStatus = LED_OFF;
-  
+  pattern = &OneLongBlink;
+  position = 0;
+  endtime = millis();
+  ledList = LedList();
+}
 
+void Led::setStatus( int s) {
+  status = s;
+}
+
+void Led::setPattern( int (*p)[20]){
+  pattern = p;
+  position = 0;
+  endtime = millis();
 }
 
 void Led::update() {
@@ -50,12 +62,4 @@ void Led::update() {
       digitalWrite( pin, LOW);
       break;
   }
-}
-
-
-void Led::blinkStart() {
-  status = LED_BLINK;
-  position = -1;
-  endtime = millis();
-  update();
 }

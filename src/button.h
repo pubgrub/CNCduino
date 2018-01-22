@@ -1,4 +1,5 @@
 #include <Bounce2.h>
+#include <ButtonList.h>
 
 #ifndef BUTTON_H
 #define BUTTON_H
@@ -6,17 +7,12 @@
 #define BUTTON_ON 1
 #define BUTTON_OFF 0
 
-// struct Button {
-//   Bounce bounce;
-//   int status; // OFF, ON
-//   int oldStatus; // OFF, ON
-// };
-
 class Button {
   Bounce bounce;
-  int status;  //OFF, ON
-  int oldStatus; //OFF, ON
-
+  int status;
+  bool changedSinceLastRead;
+  bool changedSinceLastUpdate;
+  static ButtonList buttonList;
 
 public:
   Button( int input);
@@ -25,6 +21,7 @@ public:
   bool statusChanged();
   bool statusChangedOn();
   bool statusChangedOff();
+  bool statusJustChanged();
 
 
 };

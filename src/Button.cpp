@@ -1,12 +1,14 @@
 #include <Button.h>
+#include <ButtonList.h>
 #include <Bounce2.h>
 
 Button::Button( int input) {
   bounce = Bounce();
   bounce.attach( input);
   bounce.interval( 5);
-  oldStatus = BUTTON_OFF;
   status = BUTTON_OFF;
+  buttonlist = Buttonlist();
+  buttonList.register( this);
 }
 
 int Button::getStatus() {
@@ -14,20 +16,38 @@ int Button::getStatus() {
 }
 
 int Button::update() {
+  changedSinceLastUpdate = false;
   bounce.update();
-  oldStatus = status;
+  int oldStatus = status;
   status = bounce.read();
+  if( status != oldStatus) {
+    changedSinceLastRead = true;
+    changedSinceLastUpdate = true;
+  }
+
   return status;
 }
 
 bool Button::statusChanged() {
-  return ( oldStatus != status) ? true : false;
+  if( changedSinceLastRead) {
+    changedSinceLastRead = false;
+    return true;
+  }
+  return false;
 }
 
 bool Button::statusChangedOn() {
-  return (status == BUTTON_ON && oldStatus == BUTTON_OFF) ? true : false;
+  if( changedSinceLastRead && ( status == BUTTON_ON )) {
+    changedSinceLastRead = false;
+    return true;
+  }
+  return false;
 }
 
 bool Button::statusChangedOff() {
-  return (status == BUTTON_OFF && oldStatus == BUTTON_ON) ? true : false;
+  if( changedSinceLastRead && ( status == BUTTON_OFF )) {
+    changedSinceLastRead = false;
+    return true;
+  }
+  return false;
 }
