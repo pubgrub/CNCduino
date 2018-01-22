@@ -3,6 +3,7 @@
 #include <Bounce2.h>
 #include <Led.h>
 #include <Button.h>
+#include <Input.h>
 
 // LEDs definieren
 
@@ -54,18 +55,23 @@ Led xyzErrLed = Led( XYZ_ERR_LED);
 
 // BUTTONS ***********************
 
-
-
 Button ioOnButton = Button( IO_ON_SW);
 Button ioOffButton = Button( IO_OFF_SW);
 Button xyzResetButton = Button( XYZ_RESET_SW);
 
 // INPUTS except Buttons
 
-struct Input {
-  int status; // OFF, ON
-  int oldStatus; //OFF, ON
-};
+Input FuErrInput = Input( FU_ERR_SW);
+Input PhErrInput = Input( PH_ERR_SW);
+Input NotausErrInput = Input( NOTAUS_SW);
+Input XErrInput = Input( X_ERR_SW);
+Input YErrInput = Input( Y_ERR_SW);
+Input ZErrInput = Input( Z_ERR_SW);
+
+// Fehler-Status OK=false, Fehler = true
+
+bool FuErrStatus;
+bool PHErrStatus;
 
 
 int Io_status;
@@ -171,25 +177,6 @@ void setup() {
     pinMode( LIMIT_ERR_RLY, OUTPUT);
     pinMode( LIMIT_OVRD_RLY, OUTPUT);
 
-// LEDs initialisieren
-
-    xyzErrLed.status = OFF;
-    xyzErrLed.pin = xyzErrLed;
-
-// Buttons initialisieren
-
-    ioOnButton.bounce = Bounce();
-    ioOnButton.bounce.attach(IO_ON_SW);
-    ioOnButton.bounce.interval(5);
-
-    IoOffButton.bounce = Bounce();
-    IoOffButton.bounce.attach(IO_OFF_SW);
-    IoOffButton.bounce.interval(5);
-
-    XyzResetButton.bounce = Bounce();
-    XyzResetButton.bounce.attach( XYZ_RESET_SW);
-    XyzResetButton.bounce.interval(5);
-
     Serial.print( "Start\n");
 
 }
@@ -198,6 +185,14 @@ void setup() {
 void loop() {
 
   // Update Status der Eingänge
+
+Input::inputList.update();
+
+// Update Status der Buttons
+
+Button::buttonList.update();
+
+
 
   Fu_err_status = 1 - digitalRead( FU_ERR_SW);
   Ph_err_status = 1 - digitalRead( PH_ERR_SW);
@@ -211,23 +206,6 @@ void loop() {
   if( ! digitalRead( Z_ERR_SW))
     Xyz_err_status += Z_ERR;
 
-  // Update Status der Buttons
-
-  ioOnButton.bounce.update();
-  IoOffButton.bounce.update();
-  XyzResetButton.bounce.update();
-
-  // lese Status der Buttons
-
-  ioOnButton.status = ioOnButton.bounce.read();
-  IoOffButton.status = IoOffButton.bounce.read();
-  XyzResetButton.status = XyzResetButton.bounce.read();
-
-
-
-  ledUpdate(xyzErrLed);
-
-
 
   fuStatusUpdate();
   phStatusUpdate();
@@ -236,4 +214,7 @@ void loop() {
 
   ioStatusUpdate(Io_status);
 
+  // LEDs updaten
+
+  Led::ledList.update();
 }
