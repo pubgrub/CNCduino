@@ -22,13 +22,15 @@ int *Blinks[8] = {  Xyz_Blinks_0,  Xyz_Blinks_1,  Xyz_Blinks_2,  Xyz_Blinks_12,
                   Xyz_Blinks_3,  Xyz_Blinks_13, Xyz_Blinks_23, Xyz_Blinks_123 };;
 
 
+LedList Led::ledList = LedList();
+
 Led::Led( int p){
   pin =p;
   status = LED_OFF;
   pattern = &OneLongBlink;
   position = 0;
   endtime = millis();
-  ledList = LedList();
+  Led::ledList.registerLed( this);
 }
 
 void Led::setStatus( int s) {

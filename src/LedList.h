@@ -1,8 +1,7 @@
-
-#include <Led.h>
-
 #ifndef LEDLIST_H
 #define LEDLIST_H
+
+class Led;
 
 class LedList {
   int leds;
@@ -13,5 +12,8 @@ public:
   void registerLed( Led* led);
   void update();
 };
+
+#include <Led.h>
+
 
 #endif

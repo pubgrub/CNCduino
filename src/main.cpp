@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <Controllino.h>
 #include <Bounce2.h>
-#include <led.h>
-#include <button.h>
+#include <Led.h>
+#include <Button.h>
 
 // LEDs definieren
 
@@ -36,26 +36,29 @@
 #define LIMIT_OVRD_RLY CONTROLLINO_R13
 
 
+#define OFF 0
+#define ON 1
+
 const int X_ERR = 1;
 const int Y_ERR = 2;
 const int Z_ERR = 4;
+
+
 
 // LED ************************
 
 extern int *Blinks[8];
 
-const int OFF = 0;
-const int ON = 1;
 
-Led Xyz_err_led;
+Led xyzErrLed = Led( XYZ_ERR_LED);
 
 // BUTTONS ***********************
 
 
 
-Button IoOnButton;
-Button IoOffButton;
-Button XyzResetButton;
+Button ioOnButton = Button( IO_ON_SW);
+Button ioOffButton = Button( IO_OFF_SW);
+Button xyzResetButton = Button( XYZ_RESET_SW);
 
 // INPUTS except Buttons
 
@@ -110,18 +113,18 @@ void notausStatusUpdate() {
 void xyzStatusUpdate() {
   if( Xyz_err_status) {
 
-    int old_status = Xyz_err_led.mode;
+    int old_status = xyzErrLed.mode;
     if( old_status != Xyz_err_status) {
-      Xyz_err_led.pattern = (int(*)[20])Blinks[Xyz_err_status]  ;
-      Xyz_err_led.mode = Xyz_err_status;
-      ledBlinkStart(Xyz_err_led);
+      xyzErrLed.pattern = (int(*)[20])Blinks[Xyz_err_status]  ;
+      xyzErrLed.mode = Xyz_err_status;
+      ledBlinkStart(xyzErrLed);
     }
     Io_status = OFF;
   }
   else {
-    Xyz_err_led.status = OFF;
-    Xyz_err_led.mode = 0;
-    ledUpdate( Xyz_err_led);
+    xyzErrLed.status = OFF;
+    xyzErrLed.mode = 0;
+    ledUpdate( xyzErrLed);
   }
 }
 
@@ -170,14 +173,14 @@ void setup() {
 
 // LEDs initialisieren
 
-    Xyz_err_led.status = OFF;
-    Xyz_err_led.pin = XYZ_ERR_LED;
+    xyzErrLed.status = OFF;
+    xyzErrLed.pin = xyzErrLed;
 
 // Buttons initialisieren
 
-    IoOnButton.bounce = Bounce();
-    IoOnButton.bounce.attach(IO_ON_SW);
-    IoOnButton.bounce.interval(5);
+    ioOnButton.bounce = Bounce();
+    ioOnButton.bounce.attach(IO_ON_SW);
+    ioOnButton.bounce.interval(5);
 
     IoOffButton.bounce = Bounce();
     IoOffButton.bounce.attach(IO_OFF_SW);
@@ -210,19 +213,19 @@ void loop() {
 
   // Update Status der Buttons
 
-  IoOnButton.bounce.update();
+  ioOnButton.bounce.update();
   IoOffButton.bounce.update();
   XyzResetButton.bounce.update();
 
   // lese Status der Buttons
 
-  IoOnButton.status = IoOnButton.bounce.read();
+  ioOnButton.status = ioOnButton.bounce.read();
   IoOffButton.status = IoOffButton.bounce.read();
   XyzResetButton.status = XyzResetButton.bounce.read();
 
 
 
-  ledUpdate(Xyz_err_led);
+  ledUpdate(xyzErrLed);
 
 
 

@@ -2,13 +2,14 @@
 #include <ButtonList.h>
 #include <Bounce2.h>
 
+ButtonList Button::buttonList = ButtonList();
+
 Button::Button( int input) {
   bounce = Bounce();
   bounce.attach( input);
   bounce.interval( 5);
   status = BUTTON_OFF;
-  buttonlist = Buttonlist();
-  buttonList.register( this);
+  Button::buttonList.registerButton( this);
 }
 
 int Button::getStatus() {

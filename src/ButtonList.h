@@ -1,11 +1,7 @@
-#ifdef BUTTON_H
-  #error CAN_H ist definiert
-  #endif
-
-#include <Button.h>
-
 #ifndef BUTTONLIST_H
 #define BUTTONLIST_H
+
+class Button;
 
 class ButtonList {
   int buttons;
@@ -17,4 +13,5 @@ public:
   void update();
 };
 
+#include <Button.h>
 #endif

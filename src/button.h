@@ -1,5 +1,4 @@
 #include <Bounce2.h>
-#include <ButtonList.h>
 
 #ifndef BUTTON_H
 #define BUTTON_H
@@ -7,14 +6,17 @@
 #define BUTTON_ON 1
 #define BUTTON_OFF 0
 
+class ButtonList;
+
 class Button {
   Bounce bounce;
   int status;
   bool changedSinceLastRead;
   bool changedSinceLastUpdate;
-  static ButtonList buttonList;
 
 public:
+  static ButtonList buttonList;
+
   Button( int input);
   int getStatus();
   int update();
@@ -26,6 +28,7 @@ public:
 
 };
 
+#include <ButtonList.h>
 
 
 #endif
