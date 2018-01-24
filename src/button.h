@@ -13,6 +13,7 @@ class Button {
   int status;
   bool changedSinceLastRead;
   bool changedSinceLastUpdate;
+  long timeAtLastChange;
 
 public:
   static ButtonList buttonList;

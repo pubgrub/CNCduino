@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <Button.h>
 #include <ButtonList.h>
 #include <Bounce2.h>
@@ -10,6 +11,7 @@ Button::Button( int input) {
   bounce.interval( 5);
   status = BUTTON_OFF;
   Button::buttonList.registerButton( this);
+  timeAtLastChange = millis();
 }
 
 int Button::getStatus() {
@@ -24,6 +26,7 @@ int Button::update() {
   if( status != oldStatus) {
     changedSinceLastRead = true;
     changedSinceLastUpdate = true;
+    timeAtLastChange = millis();
   }
 
   return status;

@@ -58,20 +58,31 @@ Led xyzErrLed = Led( XYZ_ERR_LED);
 Button ioOnButton = Button( IO_ON_SW);
 Button ioOffButton = Button( IO_OFF_SW);
 Button xyzResetButton = Button( XYZ_RESET_SW);
+Button limitOvrdButton = Button( LIMIT_OVRD_SW);
 
 // INPUTS except Buttons
 
-Input FuErrInput = Input( FU_ERR_SW);
-Input PhErrInput = Input( PH_ERR_SW);
-Input NotausErrInput = Input( NOTAUS_SW);
-Input XErrInput = Input( X_ERR_SW);
-Input YErrInput = Input( Y_ERR_SW);
-Input ZErrInput = Input( Z_ERR_SW);
+Input FuErrInput = Input( FU_ERR_SW, 1);
+Input PhErrInput = Input( PH_ERR_SW, 1);
+Input NotausErrInput = Input( NOTAUS_SW, 1);
+Input XErrInput = Input( X_ERR_SW, 1);
+Input YErrInput = Input( Y_ERR_SW, 1);
+Input ZErrInput = Input( Z_ERR_SW, 1);
+Input LimitErrInput = Input( LIMIT_ERR_SW, 1);
 
 // Fehler-Status OK=false, Fehler = true
 
 bool FuErrStatus;
 bool PHErrStatus;
+bool NotausErrStatus;
+bool XyzErrStatus;
+int  XyzErrValue;
+bool LimitErrStatus;
+
+bool PriorityErrorStatus; // PH oder Notaus, haben Vorrang und disablen die anderen Errors
+
+bool ioStatus;
+
 
 
 int Io_status;
@@ -192,19 +203,29 @@ Input::inputList.update();
 
 Button::buttonList.update();
 
+// Update wirkliche Fehler-Status
 
+NotausErrStatus = NotausErrInput.getStatus();
+PHErrStatus = PhErrInput.getStatus();
 
-  Fu_err_status = 1 - digitalRead( FU_ERR_SW);
-  Ph_err_status = 1 - digitalRead( PH_ERR_SW);
-  Notaus_err_status = 1 - digitalRead( NOTAUS_SW);
+//Andere Fehler würden von diesen mit ausgelöst, werden deshalb unterdrückt
+PriorityErrorStatus = NotausErrStatus || PHErrStatus;
 
-  Xyz_err_status = 0;
-  if( ! digitalRead( X_ERR_SW))
-    Xyz_err_status += X_ERR;
-  if( ! digitalRead( Y_ERR_SW))
-    Xyz_err_status += Y_ERR;
-  if( ! digitalRead( Z_ERR_SW))
-    Xyz_err_status += Z_ERR;
+FuErrStatus = ! PriorityErrorStatus && FuErrInput.getStatus();
+
+// Fehler der einzelnen Achsen auslesen
+int xyzErrors = 0;
+xyzErrors += XErrInput.getStatus() ? X_ERR : 0;
+xyzErrors += YErrInput.getStatus() ? Y_ERR : 0;
+xyzErrors += ZErrInput.getStatus() ? Z_ERR : 0;
+
+if( xyzErrors && ! PriorityErrorStatus) {
+  XyzErrStatus = true;
+  XyzErrValue = xyzErrors;
+}
+
+LimitErrStatus = ! PriorityErrorStatus && LimitErrInput.getStatus();
+
 
 
   fuStatusUpdate();

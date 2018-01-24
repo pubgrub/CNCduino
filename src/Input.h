@@ -8,7 +8,8 @@ class InputList;
 
 class Input {
   int pin;
-  int status; // OFF, ON
+  bool invert; // false: err = 1 /high, true: err=0/low
+  bool status; // OFF, ON
   bool changedSinceLastRead;
   bool changedSinceLastUpdate;
 
@@ -16,9 +17,9 @@ class Input {
 public:
   static InputList inputList;
 
-  Input( int p);
+  Input( int p, bool inv);
   void update();
-  int getStatus();
+  bool getStatus();
   bool statusChanged();
   bool statusChangedOn();
   bool statusChangedOff();
