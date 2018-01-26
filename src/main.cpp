@@ -51,7 +51,8 @@ const int Z_ERR = 4;
 extern int *Blinks[8];
 
 
-Led xyzErrLed = Led( XYZ_ERR_LED);
+Led XyzErrLed = Led( XYZ_ERR_LED);
+Led PhErrLed = Led( PH_ERR_LED);
 
 // BUTTONS ***********************
 
@@ -107,43 +108,6 @@ void ioStatusUpdate( int status){
   digitalWrite( ENABLE_RLY, status);
 }
 
-void fuStatusUpdate() {
-  if( Ph_err_status == OFF && Notaus_err_status == OFF && Fu_err_status)
-    digitalWrite( FU_ERR_LED, ON);
-  else
-    digitalWrite( FU_ERR_LED, OFF);
-  if( Fu_err_status)
-    Io_status = OFF;
-}
-
-void phStatusUpdate() {
-  digitalWrite( PH_ERR_LED, Ph_err_status);
-  if( Ph_err_status)
-    Io_status = OFF;
-}
-
-void notausStatusUpdate() {
-  if( Notaus_err_status)
-    Io_status = OFF;
-}
-
-void xyzStatusUpdate() {
-  if( Xyz_err_status) {
-
-    int old_status = xyzErrLed.mode;
-    if( old_status != Xyz_err_status) {
-      xyzErrLed.pattern = (int(*)[20])Blinks[Xyz_err_status]  ;
-      xyzErrLed.mode = Xyz_err_status;
-      ledBlinkStart(xyzErrLed);
-    }
-    Io_status = OFF;
-  }
-  else {
-    xyzErrLed.status = OFF;
-    xyzErrLed.mode = 0;
-    ledUpdate( xyzErrLed);
-  }
-}
 
 
 void setup() {
@@ -195,47 +159,44 @@ void setup() {
 
 void loop() {
 
-  // Update Status der Eingänge
+    // Update Status der Eingänge
 
-Input::inputList.update();
+  Input::inputList.update();
 
-// Update Status der Buttons
+  // Update Status der Buttons
 
-Button::buttonList.update();
+  Button::buttonList.update();
 
-// Update wirkliche Fehler-Status
+  // Update wirkliche Fehler-Status
 
-NotausErrStatus = NotausErrInput.getStatus();
-PHErrStatus = PhErrInput.getStatus();
+  NotausErrStatus = NotausErrInput.getStatus();
+  PHErrStatus = PhErrInput.getStatus();
 
-//Andere Fehler würden von diesen mit ausgelöst, werden deshalb unterdrückt
-PriorityErrorStatus = NotausErrStatus || PHErrStatus;
+  //Andere Fehler würden von diesen mit ausgelöst, werden deshalb unterdrückt
+  PriorityErrorStatus = NotausErrStatus || PHErrStatus;
 
-FuErrStatus = ! PriorityErrorStatus && FuErrInput.getStatus();
+  FuErrStatus = ! PriorityErrorStatus && FuErrInput.getStatus();
 
-// Fehler der einzelnen Achsen auslesen
-int xyzErrors = 0;
-xyzErrors += XErrInput.getStatus() ? X_ERR : 0;
-xyzErrors += YErrInput.getStatus() ? Y_ERR : 0;
-xyzErrors += ZErrInput.getStatus() ? Z_ERR : 0;
+  // Fehler der einzelnen Achsen auslesen
+  int xyzErrors = 0;
+  xyzErrors += XErrInput.getStatus() ? X_ERR : 0;
+  xyzErrors += YErrInput.getStatus() ? Y_ERR : 0;
+  xyzErrors += ZErrInput.getStatus() ? Z_ERR : 0;
 
-if( xyzErrors && ! PriorityErrorStatus) {
-  XyzErrStatus = true;
-  XyzErrValue = xyzErrors;
-}
-
-LimitErrStatus = ! PriorityErrorStatus && LimitErrInput.getStatus();
+  if( xyzErrors && ! PriorityErrorStatus) {
+    XyzErrStatus = LED_BLINK;
+    XyzErrValue = xyzErrors;
+  }
 
 
+  LimitErrStatus = ! PriorityErrorStatus && LimitErrInput.getStatus();
 
-  fuStatusUpdate();
-  phStatusUpdate();
-  notausStatusUpdate();
-  xyzStatusUpdate();
 
-  ioStatusUpdate(Io_status);
+
+
 
   // LEDs updaten
 
   Led::ledList.update();
+
 }
