@@ -1,13 +1,13 @@
-#ifndef LED_H
-#define LED_H
+#ifndef OUTPUT_H
+#define OUTPUT_H
 
-#define LED_OFF 0
-#define LED_ON 1
-#define LED_BLINK 2
+#define OUTPUT_OFF 0
+#define OUTPUT_ON 1
+#define OUTPUT_BLINK 2
 
-class LedList;
+class OutputList;
 
-class Led {
+class Output {
   int pin;
   int status; // OFF, ON, BLINK
   int (*pattern)[20];
@@ -15,17 +15,17 @@ class Led {
   unsigned long endtime; // wann weiter im pattern
 
 public:
-  static LedList ledList;
+  static OutputList outputList;
 
 
-  Led( int p);
+  Output( int p);
   void update();
   void setPattern( int (*pattern)[20]);
   void setStatus( int s);
 
 };
 
-#include <LedList.h>
+#include <OutputList.h>
 
 extern int OneShortBlinks[20];
 extern int TwoShortBlinks[20];

@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <Controllino.h>
 #include <Bounce2.h>
-#include <Led.h>
+#include <Output.h>
 #include <Button.h>
 #include <Input.h>
 
@@ -55,11 +55,11 @@ const int Z_ERR = 4;
 extern int *Blinks[8];
 
 
-Led XyzErrLed = Led( XYZ_ERR_LED);
-Led PhErrLed = Led( PH_ERR_LED);
-Led FuErrLed = Led( FU_ERR_LED);
-Led LimitErrLedRed = Led( LIMIT_ERR_LED_RED);
-Led LimitErrLedGreen = Led( LIMIT_ERR_LED_GREEN);
+Output XyzErrLed = Output( XYZ_ERR_LED);
+Output PhErrLed = Output( PH_ERR_LED);
+Output FuErrLed = Output( FU_ERR_LED);
+Output LimitErrLedRed = Output( LIMIT_ERR_LED_RED);
+Output LimitErrLedGreen = Output( LIMIT_ERR_LED_GREEN);
 
 // BUTTONS ***********************
 
@@ -212,13 +212,13 @@ void loop() {
 
 
   // Leds setzen
-  XyzErrLed.setStatus( XyzErrStatus ? LED_BLINK : LED_OFF);
-  PhErrLed.setStatus( PHErrStatus ? LED_ON : LED_OFF);
-  FuErrLed.setStatus( FuErrStatus ? LED_ON : LED_OFF);
+  XyzErrLed.setStatus( XyzErrStatus ? OUTPUT_BLINK : OUTPUT_OFF);
+  PhErrLed.setStatus( PHErrStatus ? OUTPUT_ON : OUTPUT_OFF);
+  FuErrLed.setStatus( FuErrStatus ? OUTPUT_ON : OUTPUT_OFF);
 
 
-  // LEDs updaten
+  // OUTPUTs updaten
 
-  Led::ledList.update();
+  Output::outputList.update();
 
 }

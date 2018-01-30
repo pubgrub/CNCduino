@@ -1,6 +1,6 @@
 #include <arduino.h>
-#include <Led.h>
-#include <LedList.h>
+#include <Output.h>
+#include <OutputList.h>
 
 int OneShortBlinks[20] = { 800, 200};
 int TwoShortBlinks[20] = { 600, 200, 200, 200};
@@ -22,33 +22,33 @@ int *Blinks[8] = {  Xyz_Blinks_0,  Xyz_Blinks_1,  Xyz_Blinks_2,  Xyz_Blinks_12,
                   Xyz_Blinks_3,  Xyz_Blinks_13, Xyz_Blinks_23, Xyz_Blinks_123 };;
 
 
-LedList Led::ledList = LedList();
+OutputList Output::outputList = OutputList();
 
-Led::Led( int p){
+Output::Output( int p){
   pin =p;
-  status = LED_OFF;
+  status = OUTPUT_OFF;
   pattern = &OneLongBlink;
   position = 0;
   endtime = millis();
-  Led::ledList.registerLed( this);
+  Output::outputList.registerOutput( this);
 }
 
-void Led::setStatus( int s) {
+void Output::setStatus( int s) {
   status = s;
 }
 
-void Led::setPattern( int (*p)[20]){
+void Output::setPattern( int (*p)[20]){
   pattern = p;
   position = 0;
   endtime = millis();
 }
 
-void Led::update() {
+void Output::update() {
   switch( status) {
-    case LED_ON:
+    case OUTPUT_ON:
       digitalWrite( pin, HIGH);
       break;
-    case LED_BLINK:
+    case OUTPUT_BLINK:
       if (millis() >= endtime) {
         position++;
         if( (*pattern)[position] == 0)
@@ -60,7 +60,7 @@ void Led::update() {
           digitalWrite( pin, LOW);
       }
       break;
-    case LED_OFF:
+    case OUTPUT_OFF:
       digitalWrite( pin, LOW);
       break;
   }
