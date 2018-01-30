@@ -25,3 +25,25 @@ void Input::update() {
 bool Input::getStatus() {
   return status;
 }
+
+bool Input::statusChanged() {
+  if( changedSinceLastRead) {
+    changedSinceLastRead = false;
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+bool Input::statusChangedOn() {
+  return ( statusChanged() && getStatus()) ? true : false;
+}
+
+bool Input::statusChangedOff() {
+  return ( statusChanged() && ! getStatus()) ? true : false;
+}
+
+bool Input::statusJustChanged() {
+  return changedSinceLastUpdate;
+}

@@ -10,7 +10,8 @@
 #define IO_ON_LED CONTROLLINO_D0
 #define PH_ERR_LED CONTROLLINO_D4
 #define FU_ERR_LED CONTROLLINO_D5
-#define LIMIT_ERR_LED CONTROLLINO_D1
+#define LIMIT_ERR_LED_RED CONTROLLINO_D1
+#define LIMIT_ERR_LED_GREEN CONTROLLINO_D2
 #define XYZ_ERR_LED CONTROLLINO_D3
 #define SAUG_ON_LED CONTROLLINO_D6
 
@@ -36,6 +37,9 @@
 #define LIMIT_ERR_RLY CONTROLLINO_R15
 #define LIMIT_OVRD_RLY CONTROLLINO_R13
 
+// sonstige Inputs definieren
+
+// #define LIMIT_ERR_OVRD_STATUS CONTROLLINO XX
 
 #define OFF 0
 #define ON 1
@@ -53,6 +57,9 @@ extern int *Blinks[8];
 
 Led XyzErrLed = Led( XYZ_ERR_LED);
 Led PhErrLed = Led( PH_ERR_LED);
+Led FuErrLed = Led( FU_ERR_LED);
+Led LimitErrLedRed = Led( LIMIT_ERR_LED_RED);
+Led LimitErrLedGreen = Led( LIMIT_ERR_LED_GREEN);
 
 // BUTTONS ***********************
 
@@ -70,6 +77,7 @@ Input XErrInput = Input( X_ERR_SW, 1);
 Input YErrInput = Input( Y_ERR_SW, 1);
 Input ZErrInput = Input( Z_ERR_SW, 1);
 Input LimitErrInput = Input( LIMIT_ERR_SW, 1);
+// Input LimitErrOvrdStatus = Input( LIMIT_ERR_OVRD_STATUS);
 
 // Fehler-Status OK=false, Fehler = true
 
@@ -82,11 +90,10 @@ bool LimitErrStatus;
 
 bool PriorityErrorStatus; // PH oder Notaus, haben Vorrang und disablen die anderen Errors
 
-bool ioStatus;
+bool IoStatus;
 
 
 
-int Io_status;
 int Fu_err_status;
 int Ph_err_status;
 int Notaus_err_status;
@@ -130,7 +137,8 @@ void setup() {
     pinMode( IO_ON_LED, OUTPUT);
     pinMode( PH_ERR_LED, OUTPUT);
     pinMode( FU_ERR_LED, OUTPUT);
-    pinMode( LIMIT_ERR_LED, OUTPUT);
+    pinMode( LIMIT_ERR_LED_RED, OUTPUT);
+    pinMode( LIMIT_ERR_LED_GREEN, OUTPUT);
     pinMode( XYZ_ERR_LED, OUTPUT);
     pinMode( SAUG_ON_LED, OUTPUT);
 
@@ -184,15 +192,29 @@ void loop() {
   xyzErrors += ZErrInput.getStatus() ? Z_ERR : 0;
 
   if( xyzErrors && ! PriorityErrorStatus) {
-    XyzErrStatus = LED_BLINK;
+    XyzErrStatus = true;
     XyzErrValue = xyzErrors;
   }
+  else {
+    XyzErrStatus = false;
+  }
+
+  // Limit Fehler gerade neu aufgetreten
+  if( LimitErrInput.statusChangedOn()){
+    IoStatus = false;
+  }
+
+
 
 
   LimitErrStatus = ! PriorityErrorStatus && LimitErrInput.getStatus();
 
 
 
+  // Leds setzen
+  XyzErrLed.setStatus( XyzErrStatus ? LED_BLINK : LED_OFF);
+  PhErrLed.setStatus( PHErrStatus ? LED_ON : LED_OFF);
+  FuErrLed.setStatus( FuErrStatus ? LED_ON : LED_OFF);
 
 
   // LEDs updaten
