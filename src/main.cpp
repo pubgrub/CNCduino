@@ -2,7 +2,6 @@
 #include <Controllino.h>
 #include <Bounce2.h>
 #include <Output.h>
-#include <Button.h>
 #include <Input.h>
 
 // LEDs definieren
@@ -61,22 +60,22 @@ Output FuErrLed = Output( FU_ERR_LED);
 Output LimitErrLedRed = Output( LIMIT_ERR_LED_RED);
 Output LimitErrLedGreen = Output( LIMIT_ERR_LED_GREEN);
 
-// BUTTONS ***********************
+// INPUTS ***********************
 
-Button ioOnButton = Button( IO_ON_SW);
-Button ioOffButton = Button( IO_OFF_SW);
-Button xyzResetButton = Button( XYZ_RESET_SW);
-Button limitOvrdButton = Button( LIMIT_OVRD_SW);
+Input ioOnInput = Input( IO_ON_SW);
+Input ioOffInput = Input( IO_OFF_SW);
+Input xyzResetInput = Input( XYZ_RESET_SW);
+Input limitOvrdInput = Input( LIMIT_OVRD_SW);
 
-// INPUTS except Buttons
+// INPUTS except Inputs
 
-Input FuErrInput = Input( FU_ERR_SW, 1);
-Input PhErrInput = Input( PH_ERR_SW, 1);
-Input NotausErrInput = Input( NOTAUS_SW, 1);
-Input XErrInput = Input( X_ERR_SW, 1);
-Input YErrInput = Input( Y_ERR_SW, 1);
-Input ZErrInput = Input( Z_ERR_SW, 1);
-Input LimitErrInput = Input( LIMIT_ERR_SW, 1);
+Input FuErrInput = Input( FU_ERR_SW);
+Input PhErrInput = Input( PH_ERR_SW);
+Input NotausErrInput = Input( NOTAUS_SW);
+Input XErrInput = Input( X_ERR_SW);
+Input YErrInput = Input( Y_ERR_SW);
+Input ZErrInput = Input( Z_ERR_SW);
+Input LimitErrInput = Input( LIMIT_ERR_SW);
 // Input LimitErrOvrdStatus = Input( LIMIT_ERR_OVRD_STATUS);
 
 // Fehler-Status OK=false, Fehler = true
@@ -171,9 +170,9 @@ void loop() {
 
   Input::inputList.update();
 
-  // Update Status der Buttons
+  // Update Status der Inputs
 
-  Button::buttonList.update();
+  Input::inputList.update();
 
   // Update wirkliche Fehler-Status
 

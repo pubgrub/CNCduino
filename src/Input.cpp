@@ -1,28 +1,34 @@
-#include <arduino.h>
+#include <Arduino.h>
 #include <Input.h>
 #include <InputList.h>
+#include <Bounce2.h>
 
 InputList Input::inputList = InputList();
 
-Input::Input( int p, bool inv = false) {
-  pin =p;
-  invert = inv;
+Input::Input( int input) {
+  bounce = Bounce();
+  bounce.attach( input);
+  bounce.interval( 5);
+  status = INPUT_OFF;
   Input::inputList.registerInput( this);
+  timeAtLastChange = millis();
 }
 
+int Input::getStatus() {
+  return status;
+}
 
-void Input::update() {
+int Input::update() {
   changedSinceLastUpdate = false;
-  bool oldStatus = status;
-  status = (digitalRead( pin) != invert) ? true : false; // pin xor invertiert
+  bounce.update();
+  int oldStatus = status;
+  status = bounce.read();
   if( status != oldStatus) {
     changedSinceLastRead = true;
     changedSinceLastUpdate = true;
+    timeAtLastChange = millis();
   }
 
-}
-
-bool Input::getStatus() {
   return status;
 }
 
@@ -31,19 +37,21 @@ bool Input::statusChanged() {
     changedSinceLastRead = false;
     return true;
   }
-  else {
-    return false;
-  }
+  return false;
 }
 
 bool Input::statusChangedOn() {
-  return ( statusChanged() && getStatus()) ? true : false;
+  if( changedSinceLastRead && ( status == INPUT_ON )) {
+    changedSinceLastRead = false;
+    return true;
+  }
+  return false;
 }
 
 bool Input::statusChangedOff() {
-  return ( statusChanged() && ! getStatus()) ? true : false;
-}
-
-bool Input::statusJustChanged() {
-  return changedSinceLastUpdate;
+  if( changedSinceLastRead && ( status == INPUT_OFF )) {
+    changedSinceLastRead = false;
+    return true;
+  }
+  return false;
 }

@@ -4,6 +4,7 @@
 #define OUTPUT_OFF 0
 #define OUTPUT_ON 1
 #define OUTPUT_BLINK 2
+#define OUTPUT_BLINK_ONCE 3 // Output für bestimmte Zeit auf High halten
 
 class OutputList;
 

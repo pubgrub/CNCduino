@@ -65,11 +65,11 @@ bool Bounce::update()
     // Read the state of the switch port into a temporary variable.
     bool readState = digitalRead(pin);
 
-    // Clear Changed State Flag - will be reset if we confirm a button state change.
+    // Clear Changed State Flag - will be reset if we confirm a input state change.
     state &= ~_BV(STATE_CHANGED);
 
     if ( readState != (bool)(state & _BV(DEBOUNCED_STATE))) {
-      // We have seen a change from the current button state.
+      // We have seen a change from the current input state.
 
       if ( millis() - previous_millis >= interval_millis ) {
 	// We have passed the time threshold, so a new change of state is allowed.
@@ -82,7 +82,7 @@ bool Bounce::update()
     }
 
     // If the readState is different from previous readState, reset the debounce timer - as input is still unstable
-    // and we want to prevent new button state changes until the previous one has remained stable for the timeout.
+    // and we want to prevent new input state changes until the previous one has remained stable for the timeout.
     if ( readState != (bool)(state & _BV(UNSTABLE_STATE)) ) {
 	// Update Unstable Bit to macth readState
         state ^= _BV(UNSTABLE_STATE);

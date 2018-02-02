@@ -4,8 +4,8 @@ InputList::InputList() {
   inputs = 0;
 }
 
-void InputList::registerInput( Input *i) {
-  input[ inputs] = i;
+void InputList::registerInput( Input *b) {
+  input[ inputs] = b;
   inputs++;
 }
 

@@ -1,32 +1,35 @@
+#include <Bounce2.h>
+
 #ifndef INPUT_H
 #define INPUT_H
 
-#define INPUT_OFF 0
 #define INPUT_ON 1
+#define INPUT_OFF 0
 
 class InputList;
 
 class Input {
-  int pin;
-  bool invert; // false: err = 1 /high, true: err=0/low
-  bool status; // OFF, ON
+  Bounce bounce;
+  int status;
   bool changedSinceLastRead;
   bool changedSinceLastUpdate;
-
+  long timeAtLastChange;
 
 public:
   static InputList inputList;
 
-  Input( int p, bool inv);
-  void update();
-  bool getStatus();
+  Input( int input);
+  int getStatus();
+  int update();
   bool statusChanged();
   bool statusChangedOn();
   bool statusChangedOff();
   bool statusJustChanged();
 
+
 };
 
 #include <InputList.h>
+
 
 #endif

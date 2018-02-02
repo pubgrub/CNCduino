@@ -43,21 +43,25 @@ void Output::setPattern( int (*p)[20]){
   endtime = millis();
 }
 
+
 void Output::update() {
   switch( status) {
     case OUTPUT_ON:
       digitalWrite( pin, HIGH);
       break;
     case OUTPUT_BLINK:
+    case OUTPUT_BLINK_ONCE:
       if (millis() >= endtime) {
         position++;
-        if( (*pattern)[position] == 0)
+        if( (*pattern)[position] == 0) {
           position = 0;
+          if( status == OUTPUT_BLINK_ONCE) {
+            status = OUTPUT_OFF;
+            digitalWrite( pin, LOW);
+          }
+        }
         endtime += (*pattern)[position];
-        if( position % 2 == 0)
-          digitalWrite( pin, HIGH);
-        else
-          digitalWrite( pin, LOW);
+        digitalWrite( pin, ( position % 2 == 0) ? HIGH : LOW);
       }
       break;
     case OUTPUT_OFF:
