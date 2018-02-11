@@ -2,6 +2,8 @@
 #include <Output.h>
 #include <OutputList.h>
 
+extern OutputList outputList;
+
 int OneShortBlinks[20] = { 800, 200};
 int TwoShortBlinks[20] = { 600, 200, 200, 200};
 int ThreeShortBlinks[20] = { 600, 200, 200, 200, 200, 200};
@@ -24,13 +26,14 @@ int *Blinks[8] = {  Xyz_Blinks_0,  Xyz_Blinks_1,  Xyz_Blinks_2,  Xyz_Blinks_12,
 
 OutputList Output::outputList = OutputList();
 
-Output::Output( int p){
+
+void Output::attach( int p){
   pin =p;
   status = OUTPUT_OFF;
   pattern = &OneLongBlink;
   position = 0;
   endtime = millis();
-  Output::outputList.registerOutput( this);
+  outputList.registerOutput( this);
 }
 
 void Output::setStatus( int s) {

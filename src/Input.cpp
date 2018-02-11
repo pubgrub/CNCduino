@@ -3,14 +3,14 @@
 #include <InputList.h>
 #include <Bounce2.h>
 
-InputList Input::inputList = InputList();
+extern InputList inputList;
 
-Input::Input( int input) {
+void Input::attach( int input) {
   bounce = Bounce();
   bounce.attach( input);
   bounce.interval( 5);
   status = INPUT_OFF;
-  Input::inputList.registerInput( this);
+  inputList.registerInput( this);
   timeAtLastChange = millis();
 }
 

@@ -19,7 +19,7 @@ public:
   static OutputList outputList;
 
 
-  Output( int p);
+  void attach( int p);
   void update();
   void setPattern( int (*pattern)[20]);
   void setStatus( int s);

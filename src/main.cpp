@@ -3,6 +3,7 @@
 #include <Bounce2.h>
 #include <Output.h>
 #include <Input.h>
+#include <InputList.h>
 
 // LEDs definieren
 
@@ -48,34 +49,37 @@ const int Y_ERR = 2;
 const int Z_ERR = 4;
 
 
+// Lists
+
+InputList inputList = InputList();
+OutputList outputList = OutputList();
+
 
 // LED ************************
 
 extern int *Blinks[8];
 
 
-Output XyzErrLed = Output( XYZ_ERR_LED);
-Output PhErrLed = Output( PH_ERR_LED);
-Output FuErrLed = Output( FU_ERR_LED);
-Output LimitErrLedRed = Output( LIMIT_ERR_LED_RED);
-Output LimitErrLedGreen = Output( LIMIT_ERR_LED_GREEN);
+Output XyzErrLed;
+Output PhErrLed;
+Output FuErrLed;
+Output LimitErrLedRed;
+Output LimitErrLedGreen;
 
 // INPUTS ***********************
 
-Input ioOnInput = Input( IO_ON_SW);
-Input ioOffInput = Input( IO_OFF_SW);
-Input xyzResetInput = Input( XYZ_RESET_SW);
-Input limitOvrdInput = Input( LIMIT_OVRD_SW);
+Input ioOnInput;
+Input ioOffInput;
+Input xyzResetInput;
+Input limitOvrdInput;
 
-// INPUTS except Inputs
-
-Input FuErrInput = Input( FU_ERR_SW);
-Input PhErrInput = Input( PH_ERR_SW);
-Input NotausErrInput = Input( NOTAUS_SW);
-Input XErrInput = Input( X_ERR_SW);
-Input YErrInput = Input( Y_ERR_SW);
-Input ZErrInput = Input( Z_ERR_SW);
-Input LimitErrInput = Input( LIMIT_ERR_SW);
+Input FuErrInput;
+Input PhErrInput;
+Input NotausErrInput;
+Input XErrInput;
+Input YErrInput;
+Input ZErrInput;
+Input LimitErrInput;
 // Input LimitErrOvrdStatus = Input( LIMIT_ERR_OVRD_STATUS);
 
 // Fehler-Status OK=false, Fehler = true
@@ -159,6 +163,33 @@ void setup() {
     pinMode( LIMIT_ERR_RLY, OUTPUT);
     pinMode( LIMIT_OVRD_RLY, OUTPUT);
 
+    // setup Input/Output instances
+
+    // INPUTS ***********************
+
+    ioOnInput.attach( IO_ON_SW);
+    ioOffInput.attach( IO_OFF_SW);
+    xyzResetInput.attach( XYZ_RESET_SW);
+    limitOvrdInput.attach( LIMIT_OVRD_SW);
+
+    FuErrInput.attach( FU_ERR_SW);
+    PhErrInput.attach( PH_ERR_SW);
+    NotausErrInput.attach( NOTAUS_SW);
+    XErrInput.attach( X_ERR_SW);
+    YErrInput.attach( Y_ERR_SW);
+    ZErrInput.attach( Z_ERR_SW);
+    LimitErrInput.attach( LIMIT_ERR_SW);
+    // Input LimitErrOvrdStatus = Input( LIMIT_ERR_OVRD_STATUS);
+
+    // OUTPUTs
+
+    XyzErrLed.attach( XYZ_ERR_LED);
+    PhErrLed.attach( PH_ERR_LED);
+    FuErrLed.attach( FU_ERR_LED);
+    LimitErrLedRed.attach( LIMIT_ERR_LED_RED);
+    LimitErrLedGreen.attach( LIMIT_ERR_LED_GREEN);
+
+
     Serial.print( "Start\n");
 
 }
@@ -168,11 +199,8 @@ void loop() {
 
     // Update Status der Eingänge
 
-  Input::inputList.update();
+  inputList.update();
 
-  // Update Status der Inputs
-
-  Input::inputList.update();
 
   // Update wirkliche Fehler-Status
 

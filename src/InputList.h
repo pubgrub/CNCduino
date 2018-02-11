@@ -5,7 +5,7 @@ class Input;
 
 class InputList {
   int inputs;
-  Input* input[10];
+  Input* input[20];
 
 public:
   InputList();

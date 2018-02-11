@@ -6,8 +6,6 @@
 #define INPUT_ON 1
 #define INPUT_OFF 0
 
-class InputList;
-
 class Input {
   Bounce bounce;
   int status;
@@ -16,9 +14,8 @@ class Input {
   long timeAtLastChange;
 
 public:
-  static InputList inputList;
 
-  Input( int input);
+  void attach( int input);
   int getStatus();
   int update();
   bool statusChanged();
@@ -28,8 +25,5 @@ public:
 
 
 };
-
-#include <InputList.h>
-
 
 #endif
