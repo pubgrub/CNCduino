@@ -40,10 +40,14 @@ void Output::setStatus( int s) {
   status = s;
 }
 
-void Output::setPattern( int (*p)[20]){
-  pattern = p;
-  position = 0;
-  endtime = millis();
+void Output::setPattern( int (*p)[20]) {
+  Serial.println( "SetPattern");
+  if( oldPattern != p) {
+    pattern = p;
+    oldPattern = pattern;
+    position = 0;
+    endtime = millis();
+  }
 }
 
 

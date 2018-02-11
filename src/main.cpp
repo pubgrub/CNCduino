@@ -204,19 +204,27 @@ void loop() {
 
   // Update wirkliche Fehler-Status
 
-  NotausErrStatus = NotausErrInput.getStatus();
-  PHErrStatus = PhErrInput.getStatus();
+  NotausErrStatus = ! NotausErrInput.getStatus(); // Normal HIGH
+  PHErrStatus = ! PhErrInput.getStatus(); // Normal HIGH
 
   //Andere Fehler würden von diesen mit ausgelöst, werden deshalb unterdrückt
   PriorityErrorStatus = NotausErrStatus || PHErrStatus;
 
-  FuErrStatus = ! PriorityErrorStatus && FuErrInput.getStatus();
+  FuErrStatus = ! ( PriorityErrorStatus || FuErrInput.getStatus() ); // Beide Normal HIGH
 
   // Fehler der einzelnen Achsen auslesen
   int xyzErrors = 0;
-  xyzErrors += XErrInput.getStatus() ? X_ERR : 0;
-  xyzErrors += YErrInput.getStatus() ? Y_ERR : 0;
-  xyzErrors += ZErrInput.getStatus() ? Z_ERR : 0;
+  // Serial.print( XErrInput.getStatus());
+  // Serial.print( YErrInput.getStatus());
+  // Serial.print( ZErrInput.getStatus());
+
+
+  xyzErrors += XErrInput.getStatus() ? 0 : X_ERR; // Alle Normal HIGH
+  xyzErrors += YErrInput.getStatus() ? 0 : Y_ERR; //
+  xyzErrors += ZErrInput.getStatus() ? 0 : Z_ERR; //
+
+  // Serial.print( " ");
+  // Serial.println ( xyzErrors);
 
   if( xyzErrors && ! PriorityErrorStatus) {
     XyzErrStatus = true;
@@ -239,6 +247,9 @@ void loop() {
 
 
   // Leds setzen
+  if( XyzErrStatus) {
+    XyzErrLed.setPattern( (int(*)[20]) Blinks[ XyzErrValue]);
+  }
   XyzErrLed.setStatus( XyzErrStatus ? OUTPUT_BLINK : OUTPUT_OFF);
   PhErrLed.setStatus( PHErrStatus ? OUTPUT_ON : OUTPUT_OFF);
   FuErrLed.setStatus( FuErrStatus ? OUTPUT_ON : OUTPUT_OFF);
