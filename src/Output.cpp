@@ -12,13 +12,13 @@ int OneLongBlink[20] = { 500, 500};
 
 
 int Xyz_Blinks_0[20] = {};
-int Xyz_Blinks_1[20] = { 800, 200};
-int Xyz_Blinks_2[20] = { 800, 200, 200, 200};
-int Xyz_Blinks_3[20] = { 800, 200, 200, 200, 200, 200};
-int Xyz_Blinks_12[20] = { 800, 200,     800, 200, 200, 200};
-int Xyz_Blinks_13[20] = { 800, 200,     800, 200, 200, 200, 200, 200};
-int Xyz_Blinks_23[20] = { 800, 200, 200, 200,     800, 200, 200, 200, 200, 200};
-int Xyz_Blinks_123[20] = { 800, 200,     800, 200, 200, 200,     800, 200, 200, 200, 200, 200};
+int Xyz_Blinks_1[20] = { 200, 800};
+int Xyz_Blinks_2[20] = { 200, 200, 200, 800};
+int Xyz_Blinks_3[20] = { 200, 200, 200, 200, 200, 800};
+int Xyz_Blinks_12[20] = { 200, 800,     200, 200, 200, 800};
+int Xyz_Blinks_13[20] = { 200, 800,     200, 200, 200, 200, 200, 800};
+int Xyz_Blinks_23[20] = { 200, 200, 200, 800,     200, 200, 200, 200, 200, 800};
+int Xyz_Blinks_123[20] = { 200, 800,     200, 200, 200, 800,     200, 200, 200, 200, 200, 800};
 
 int *Blinks[8] = {  Xyz_Blinks_0,  Xyz_Blinks_1,  Xyz_Blinks_2,  Xyz_Blinks_12,
                   Xyz_Blinks_3,  Xyz_Blinks_13, Xyz_Blinks_23, Xyz_Blinks_123 };;
@@ -41,7 +41,6 @@ void Output::setStatus( int s) {
 }
 
 void Output::setPattern( int (*p)[20]) {
-  Serial.println( "SetPattern");
   if( oldPattern != p) {
     pattern = p;
     oldPattern = pattern;
@@ -49,7 +48,6 @@ void Output::setPattern( int (*p)[20]) {
     endtime = millis();
   }
 }
-
 
 void Output::update() {
   switch( status) {

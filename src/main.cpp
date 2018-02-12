@@ -7,7 +7,7 @@
 
 // LEDs definieren
 
-#define IO_ON_LED CONTROLLINO_D0
+#define ENABLE_LED CONTROLLINO_D0
 #define PH_ERR_LED CONTROLLINO_D4
 #define FU_ERR_LED CONTROLLINO_D5
 #define LIMIT_ERR_LED_RED CONTROLLINO_D1
@@ -32,7 +32,7 @@
 
 // Relays definieren
 
-#define XYZ_RESET_RLY CONTROLLINO_R1
+#define XYZ_RESET_RLY CONTROLLINO_R0
 #define ENABLE_RLY CONTROLLINO_R14
 #define LIMIT_ERR_RLY CONTROLLINO_R15
 #define LIMIT_OVRD_RLY CONTROLLINO_R13
@@ -65,6 +65,12 @@ Output PhErrLed;
 Output FuErrLed;
 Output LimitErrLedRed;
 Output LimitErrLedGreen;
+Output EnableLed;
+
+// Other Outputs
+
+Output XyzResetRly;
+Output EnableRly;
 
 // INPUTS ***********************
 
@@ -89,10 +95,11 @@ bool PHErrStatus;
 bool NotausErrStatus;
 bool XyzErrStatus;
 int  XyzErrValue;
+bool XyzResetStatus;
 bool LimitErrStatus;
 
-bool PriorityErrorStatus; // PH oder Notaus, haben Vorrang und disablen die anderen Errors
 
+bool PriorityErrorStatus; // PH oder Notaus, haben Vorrang und disablen die anderen Errors
 bool IoStatus;
 
 
@@ -111,33 +118,24 @@ void notausStatusUpdate();
 void xyzStatusUpdate();
 
 
-
-
-void ioStatusUpdate( int status){
-  digitalWrite( IO_ON_LED, status);
-  digitalWrite( ENABLE_RLY, status);
-}
-
-
-
 void setup() {
     // put your setup code here, to run once:
     Serial.begin(9600);
 
-    for( int i = 0; i < 8; i++) {
-      int *b = Blinks[i];
-      for( int j = 0; j < 20; j++) {
-        Serial.print( b[j]    );
-        Serial.print(" ");
-//        Serial.print( *(Blinks[i] + j));
-//        Serial.print(" ");
-      }
-      Serial.println();
-    }
+    // for( int i = 0; i < 8; i++) {
+    //   int *b = Blinks[i];
+    //   for( int j = 0; j < 20; j++) {
+    //     Serial.print( b[j]    );
+    //     Serial.print(" ");
+    //     Serial.print( *(Blinks[i] + j));
+    //     Serial.print(" ");
+    //   }
+    //   Serial.println();
+    // }
 
 // Setup Pins as INPUT or OUTPUT
 
-    pinMode( IO_ON_LED, OUTPUT);
+    pinMode( ENABLE_LED, OUTPUT);
     pinMode( PH_ERR_LED, OUTPUT);
     pinMode( FU_ERR_LED, OUTPUT);
     pinMode( LIMIT_ERR_LED_RED, OUTPUT);
@@ -184,11 +182,13 @@ void setup() {
     // OUTPUTs
 
     XyzErrLed.attach( XYZ_ERR_LED);
+    XyzResetRly.attach( XYZ_RESET_RLY);
     PhErrLed.attach( PH_ERR_LED);
     FuErrLed.attach( FU_ERR_LED);
     LimitErrLedRed.attach( LIMIT_ERR_LED_RED);
     LimitErrLedGreen.attach( LIMIT_ERR_LED_GREEN);
-
+    EnableRly.attach( ENABLE_RLY);
+    EnableLed.attach( ENABLE_LED);
 
     Serial.print( "Start\n");
 
@@ -201,6 +201,15 @@ void loop() {
 
   inputList.update();
 
+  // Einschalter gerade gedrückt?
+  // Wenn ja, erstmal einschalten, und falls Fehler aktiv, wird vor update wieder ausgeschalten
+  if( ioOnInput.statusChangedOn()) {
+    IoStatus = true;
+  }
+
+  if( ! ioOffInput.getStatus()) { // Öffner, Normal HIGH
+    IoStatus = false;
+  }
 
   // Update wirkliche Fehler-Status
 
@@ -213,25 +222,19 @@ void loop() {
   FuErrStatus = ! ( PriorityErrorStatus || FuErrInput.getStatus() ); // Beide Normal HIGH
 
   // Fehler der einzelnen Achsen auslesen
-  int xyzErrors = 0;
-  // Serial.print( XErrInput.getStatus());
-  // Serial.print( YErrInput.getStatus());
-  // Serial.print( ZErrInput.getStatus());
+  XyzErrValue = 0;
+  XyzErrValue += XErrInput.getStatus() ? 0 : X_ERR; // Alle Normal HIGH
+  XyzErrValue += YErrInput.getStatus() ? 0 : Y_ERR; //
+  XyzErrValue += ZErrInput.getStatus() ? 0 : Z_ERR; //
 
+  XyzErrStatus = ( XyzErrValue && ! PriorityErrorStatus) ? true : false;
 
-  xyzErrors += XErrInput.getStatus() ? 0 : X_ERR; // Alle Normal HIGH
-  xyzErrors += YErrInput.getStatus() ? 0 : Y_ERR; //
-  xyzErrors += ZErrInput.getStatus() ? 0 : Z_ERR; //
+  XyzResetStatus = XyzErrStatus && xyzResetInput.getStatus();
+  XyzResetRly.setStatus( XyzResetStatus ? OUTPUT_ON : OUTPUT_OFF);
 
-  // Serial.print( " ");
-  // Serial.println ( xyzErrors);
-
-  if( xyzErrors && ! PriorityErrorStatus) {
-    XyzErrStatus = true;
-    XyzErrValue = xyzErrors;
-  }
-  else {
-    XyzErrStatus = false;
+  // Jeder der oberen Fehler schaltet IOStatus aus
+  if( NotausErrStatus || PHErrStatus || XyzErrStatus) {
+    IoStatus = false;
   }
 
   // Limit Fehler gerade neu aufgetreten
@@ -239,11 +242,11 @@ void loop() {
     IoStatus = false;
   }
 
+  LimitErrStatus = LimitErrInput.getStatus();
 
 
-
-  LimitErrStatus = ! PriorityErrorStatus && LimitErrInput.getStatus();
-
+  //Enable setzen
+  EnableRly.setStatus( IoStatus ? OUTPUT_ON : OUTPUT_OFF);
 
 
   // Leds setzen
@@ -253,7 +256,7 @@ void loop() {
   XyzErrLed.setStatus( XyzErrStatus ? OUTPUT_BLINK : OUTPUT_OFF);
   PhErrLed.setStatus( PHErrStatus ? OUTPUT_ON : OUTPUT_OFF);
   FuErrLed.setStatus( FuErrStatus ? OUTPUT_ON : OUTPUT_OFF);
-
+  EnableLed.setStatus( IoStatus ? OUTPUT_ON : OUTPUT_OFF);
 
   // OUTPUTs updaten
 
