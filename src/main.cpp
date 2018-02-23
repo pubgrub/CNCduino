@@ -4,6 +4,7 @@
 #include <Output.h>
 #include <Input.h>
 #include <InputList.h>
+#include <OutputList.h>
 
 // LEDs definieren
 
@@ -23,12 +24,14 @@
 #define XYZ_RESET_SW CONTROLLINO_A3
 #define SAUG_SW CONTROLLINO_A4
 #define LIMIT_ERR_SW CONTROLLINO_A5
+#define LIMIT_OVRD_STATUS CONTROLLINO_A6
 #define FU_ERR_SW CONTROLLINO_A7
 #define PH_ERR_SW CONTROLLINO_A8
 #define X_ERR_SW CONTROLLINO_A9
 #define Y_ERR_SW CONTROLLINO_A10
 #define Z_ERR_SW CONTROLLINO_A11
 #define NOTAUS_SW CONTROLLINO_A13
+#define RESET_STATUS CONTROLLINO_A14
 
 // Relays definieren
 
@@ -71,13 +74,15 @@ Output EnableLed;
 
 Output XyzResetRly;
 Output EnableRly;
+Output LimitErrRly;
+Output LimitOvrdRly;
 
 // INPUTS ***********************
 
 Input ioOnInput;
 Input ioOffInput;
 Input xyzResetInput;
-Input limitOvrdInput;
+Input LimitOvrdInput;
 
 Input FuErrInput;
 Input PhErrInput;
@@ -86,7 +91,8 @@ Input XErrInput;
 Input YErrInput;
 Input ZErrInput;
 Input LimitErrInput;
-// Input LimitErrOvrdStatus = Input( LIMIT_ERR_OVRD_STATUS);
+Input LimitOvrdStatus;
+Input ResetStatus;
 
 // Fehler-Status OK=false, Fehler = true
 
@@ -109,16 +115,22 @@ int Ph_err_status;
 int Notaus_err_status;
 int Xyz_err_status;
 
+// Timing Startup
+
+int TimestampStart;
+bool isInitialized;
 
 
-void ioStatusUpdate( int status);
-void fuStatusUpdate();
-void phStatusUpdate();
-void notausStatusUpdate();
-void xyzStatusUpdate();
+
+// void ioStatusUpdate( int status);
+// void fuStatusUpdate();
+// void phStatusUpdate();
+// void notausStatusUpdate();
+// void xyzStatusUpdate();
 
 
 void setup() {
+
     // put your setup code here, to run once:
     Serial.begin(9600);
 
@@ -149,12 +161,14 @@ void setup() {
     pinMode( XYZ_RESET_SW, INPUT);
     pinMode( SAUG_SW, INPUT);
     pinMode( LIMIT_ERR_SW, INPUT);
+    pinMode( LIMIT_OVRD_STATUS, INPUT);
     pinMode( FU_ERR_SW, INPUT);
     pinMode( PH_ERR_SW, INPUT);
     pinMode( X_ERR_SW, INPUT);
     pinMode( Y_ERR_SW, INPUT);
     pinMode( Z_ERR_SW, INPUT);
     pinMode( NOTAUS_SW, INPUT);
+    pinMode( RESET_STATUS, INPUT);
 
     pinMode( XYZ_RESET_RLY, OUTPUT);
     pinMode( ENABLE_RLY, OUTPUT);
@@ -168,7 +182,7 @@ void setup() {
     ioOnInput.attach( IO_ON_SW);
     ioOffInput.attach( IO_OFF_SW);
     xyzResetInput.attach( XYZ_RESET_SW);
-    limitOvrdInput.attach( LIMIT_OVRD_SW);
+    LimitOvrdInput.attach( LIMIT_OVRD_SW);
 
     FuErrInput.attach( FU_ERR_SW);
     PhErrInput.attach( PH_ERR_SW);
@@ -177,7 +191,8 @@ void setup() {
     YErrInput.attach( Y_ERR_SW);
     ZErrInput.attach( Z_ERR_SW);
     LimitErrInput.attach( LIMIT_ERR_SW);
-    // Input LimitErrOvrdStatus = Input( LIMIT_ERR_OVRD_STATUS);
+    LimitOvrdStatus.attach( LIMIT_OVRD_STATUS);
+    ResetStatus.attach(RESET_STATUS);
 
     // OUTPUTs
 
@@ -189,7 +204,18 @@ void setup() {
     LimitErrLedGreen.attach( LIMIT_ERR_LED_GREEN);
     EnableRly.attach( ENABLE_RLY);
     EnableLed.attach( ENABLE_LED);
+    LimitErrRly.attach(LIMIT_ERR_RLY);
+    LimitOvrdRly.attach(LIMIT_OVRD_RLY);
 
+    // TimestampStart = millis();
+    // int oneSecBlink[20] = { 1000, 0};
+    // XyzResetRly.setPattern( &oneSecBlink);
+    // XyzResetRly.setStatus(OUTPUT_BLINK_ONCE);
+    //
+    // while( XyzResetRly.getStatus()) {
+    //   Serial.println( XyzResetRly.getStatus());
+    //   outputList.update();
+    // }
     Serial.print( "Start\n");
 
 }
@@ -242,7 +268,11 @@ void loop() {
     IoStatus = false;
   }
 
-  LimitErrStatus = LimitErrInput.getStatus();
+  LimitErrStatus = LimitErrInput.getStatus(); // evtl invertieren, falls Öffner als Limitschalter genutzt werden.
+
+  LimitErrRly.setStatus(LimitErrStatus ? OUTPUT_ON : OUTPUT_OFF);
+
+  LimitOvrdRly.setStatus(LimitOvrdInput.getStatus() ? OUTPUT_ON : OUTPUT_OFF);
 
 
   //Enable setzen
@@ -260,6 +290,6 @@ void loop() {
 
   // OUTPUTs updaten
 
-  Output::outputList.update();
+  outputList.update();
 
 }

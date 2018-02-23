@@ -6,8 +6,6 @@
 #define OUTPUT_BLINK 2
 #define OUTPUT_BLINK_ONCE 3 // Output für bestimmte Zeit auf High halten
 
-class OutputList;
-
 class Output {
   int pin;
   int status; // OFF, ON, BLINK
@@ -17,17 +15,14 @@ class Output {
   unsigned long endtime; // wann weiter im pattern
 
 public:
-  static OutputList outputList;
-
-
   void attach( int p);
   void update();
   void setPattern( int (*pattern)[20]);
   void setStatus( int s);
+  int getStatus();
 
 };
 
-#include <OutputList.h>
 
 extern int OneShortBlinks[20];
 extern int TwoShortBlinks[20];

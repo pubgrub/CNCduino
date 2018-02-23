@@ -2,7 +2,6 @@
 #include <Output.h>
 #include <OutputList.h>
 
-extern OutputList outputList;
 
 int OneShortBlinks[20] = { 800, 200};
 int TwoShortBlinks[20] = { 600, 200, 200, 200};
@@ -23,21 +22,23 @@ int Xyz_Blinks_123[20] = { 200, 800,     200, 200, 200, 800,     200, 200, 200, 
 int *Blinks[8] = {  Xyz_Blinks_0,  Xyz_Blinks_1,  Xyz_Blinks_2,  Xyz_Blinks_12,
                   Xyz_Blinks_3,  Xyz_Blinks_13, Xyz_Blinks_23, Xyz_Blinks_123 };;
 
-
-OutputList Output::outputList = OutputList();
-
+extern OutputList outputList;
 
 void Output::attach( int p){
   pin =p;
   status = OUTPUT_OFF;
-  pattern = &OneLongBlink;
-  position = 0;
-  endtime = millis();
   outputList.registerOutput( this);
+}
+
+int Output::getStatus() {
+  return status;
 }
 
 void Output::setStatus( int s) {
   status = s;
+  if( status == OUTPUT_BLINK_ONCE || status == OUTPUT_BLINK) {
+    endtime = millis() + (*pattern)[0];
+  }
 }
 
 void Output::setPattern( int (*p)[20]) {
@@ -45,7 +46,6 @@ void Output::setPattern( int (*p)[20]) {
     pattern = p;
     oldPattern = pattern;
     position = 0;
-    endtime = millis();
   }
 }
 
@@ -62,7 +62,6 @@ void Output::update() {
           position = 0;
           if( status == OUTPUT_BLINK_ONCE) {
             status = OUTPUT_OFF;
-            digitalWrite( pin, LOW);
           }
         }
         endtime += (*pattern)[position];
