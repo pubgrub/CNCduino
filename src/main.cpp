@@ -31,7 +31,7 @@
 #define Y_ERR_SW CONTROLLINO_A10
 #define Z_ERR_SW CONTROLLINO_A11
 #define NOTAUS_SW CONTROLLINO_A13
-#define RESET_STATUS CONTROLLINO_A14
+#define MACH_OK_STATUS CONTROLLINO_A14
 
 // Relays definieren
 
@@ -57,63 +57,68 @@ const int Z_ERR = 4;
 InputList inputList = InputList();
 OutputList outputList = OutputList();
 
+// Alle Variablen, die mit Limit Fehler zu tun haben
 
-// LED ************************
+Output LimitErrLedRed;       // Rote LED in Limit-Err-Button
+Output LimitErrLedGreen;     // Grüne LED in Limit-Err-Button
+Output LimitErrRly;          // Output von Limit-Error-Status an Mach
+Output LimitOvrdRly;         // Output von Limit-Error-Ovrd-Status an Mach
+Input LimitOvrdInput;        // Status von Limit_Error-Ovrd-Button
+Input LimitErrInput;         // Status von Limit-Error-Switch
+Input LimitOvrdMachStatus;   // Input von Limit-Ovrd-Status aus Mach
+bool LimitErrStatus;         // Interner Status von Limit-Error (extra, weil Limit-Sw Öffner oder Schließer sein kann)
+bool LimitErrOvrdStatus;     // Interner Status des Limit-Overrides
+
+
+// Alle Variablen, die mit XYZ-Fehlern zu tun haben
+
+Output XyzErrLed;            // Gelbe LED im XYZ-Err-Button
+Output XyzResetRly;          // Output von Xyz-Reset an Reset-Relay;
+Input xyzResetInput;         // Status des Reset-Tasters
+Input XErrInput;             // Status des X-Achsen-Fehlers
+Input YErrInput;             // Status des Y-Achsen-Fehlers
+Input ZErrInput;             // Status des Z-Achsen-Fehlers
+int  XyzErrValue;            // Fehler-Status, bitweise kombiniert. 0=kein Fehler
+bool XyzErrStatus;           // Echter Fehler-Status (nach Prio-Fehler-Check)
+bool XyzResetStatus;         // Tatsächerlicher Reset-Status ( Button + Fehler)
+
+
+// Alle Variablen, die mit PH-Fehlern zu tun haben
+
+Output PhErrLed;             // Gelbe LED im PH-Err-Button
+Input PhErrInput;            // Status des PH-Err-Switches
+bool PHErrStatus;            // Interner Status des PH Errors
+
+
+// Alle Variablen, die mit Notaus-Errors zu tun haben
+
+Input NotausErrInput;        // Status des Notaus-Relais
+bool NotausErrStatus;        // Interner Status des Notaus Errors
+
+
+// Alle Variablen, die mit FU-Fehlern zu tun haben
+
+Output FuErrLed;             // Gelbe LED im FU-Err-Button
+Input FuErrInput;            // Fehler-Status des FU
+bool FuErrStatus;            // Echter Status des FU-Fehler (nach Prio-Fehler-Check)
+
+
+// Alle Variablen, die mit dem Enable / Reset System zu tun haben
+
+bool InternEnableStatus;      // Interner "Enable"-Status
+Output EnableLed;             // Weiße LED im "ON"-Switch
+Input EnableOnInput;          // Status des weißen "ON"-Switches
+Input EnableOffInput;         // Status des schwarzen "OFF"-Switches
+Input MachOkStatus;           // "Reset"-Status aus Mach
+Output EnableRly;             // "Enable"-Signal an Mach
+
+
+
+// Andere Variablen
 
 extern int *Blinks[8];
-
-
-Output XyzErrLed;
-Output PhErrLed;
-Output FuErrLed;
-Output LimitErrLedRed;
-Output LimitErrLedGreen;
-Output EnableLed;
-
-// Other Outputs
-
-Output XyzResetRly;
-Output EnableRly;
-Output LimitErrRly;
-Output LimitOvrdRly;
-
-// INPUTS ***********************
-
-Input ioOnInput;
-Input ioOffInput;
-Input xyzResetInput;
-Input LimitOvrdInput;
-
-Input FuErrInput;
-Input PhErrInput;
-Input NotausErrInput;
-Input XErrInput;
-Input YErrInput;
-Input ZErrInput;
-Input LimitErrInput;
-Input LimitOvrdStatus;
-Input ResetStatus;
-
-// Fehler-Status OK=false, Fehler = true
-
-bool FuErrStatus;
-bool PHErrStatus;
-bool NotausErrStatus;
-bool XyzErrStatus;
-int  XyzErrValue;
-bool XyzResetStatus;
-bool LimitErrStatus;
-
-
 bool PriorityErrorStatus; // PH oder Notaus, haben Vorrang und disablen die anderen Errors
-bool IoStatus;
 
-
-
-int Fu_err_status;
-int Ph_err_status;
-int Notaus_err_status;
-int Xyz_err_status;
 
 // Timing Startup
 
@@ -168,7 +173,7 @@ void setup() {
     pinMode( Y_ERR_SW, INPUT);
     pinMode( Z_ERR_SW, INPUT);
     pinMode( NOTAUS_SW, INPUT);
-    pinMode( RESET_STATUS, INPUT);
+    pinMode( MACH_OK_STATUS, INPUT);
 
     pinMode( XYZ_RESET_RLY, OUTPUT);
     pinMode( ENABLE_RLY, OUTPUT);
@@ -179,8 +184,8 @@ void setup() {
 
     // INPUTS ***********************
 
-    ioOnInput.attach( IO_ON_SW);
-    ioOffInput.attach( IO_OFF_SW);
+    EnableOnInput.attach( IO_ON_SW);
+    EnableOffInput.attach( IO_OFF_SW);
     xyzResetInput.attach( XYZ_RESET_SW);
     LimitOvrdInput.attach( LIMIT_OVRD_SW);
 
@@ -191,8 +196,8 @@ void setup() {
     YErrInput.attach( Y_ERR_SW);
     ZErrInput.attach( Z_ERR_SW);
     LimitErrInput.attach( LIMIT_ERR_SW);
-    LimitOvrdStatus.attach( LIMIT_OVRD_STATUS);
-    ResetStatus.attach(RESET_STATUS);
+    LimitOvrdMachStatus.attach( LIMIT_OVRD_STATUS);
+    MachOkStatus.attach(MACH_OK_STATUS);
 
     // OUTPUTs
 
@@ -202,8 +207,11 @@ void setup() {
     FuErrLed.attach( FU_ERR_LED);
     LimitErrLedRed.attach( LIMIT_ERR_LED_RED);
     LimitErrLedGreen.attach( LIMIT_ERR_LED_GREEN);
+    LimitErrLedRed.setPattern( &OneLongBlink);
+    LimitErrLedGreen.setPattern( &OneLongBlink);
     EnableRly.attach( ENABLE_RLY);
     EnableLed.attach( ENABLE_LED);
+    EnableLed.setPattern( &OneLongBlink);
     LimitErrRly.attach(LIMIT_ERR_RLY);
     LimitOvrdRly.attach(LIMIT_OVRD_RLY);
 
@@ -229,12 +237,12 @@ void loop() {
 
   // Einschalter gerade gedrückt?
   // Wenn ja, erstmal einschalten, und falls Fehler aktiv, wird vor update wieder ausgeschalten
-  if( ioOnInput.statusChangedOn()) {
-    IoStatus = true;
+  if( EnableOnInput.statusChangedOn()) {
+    InternEnableStatus = true;
   }
 
-  if( ! ioOffInput.getStatus()) { // Öffner, Normal HIGH
-    IoStatus = false;
+  if( ! EnableOffInput.getStatus()) { // Öffner, Normal HIGH
+    InternEnableStatus = false;
   }
 
   // Update wirkliche Fehler-Status
@@ -258,25 +266,22 @@ void loop() {
   XyzResetStatus = XyzErrStatus && xyzResetInput.getStatus();
   XyzResetRly.setStatus( XyzResetStatus ? OUTPUT_ON : OUTPUT_OFF);
 
-  // Jeder der oberen Fehler schaltet IOStatus aus
-  if( NotausErrStatus || PHErrStatus || XyzErrStatus) {
-    IoStatus = false;
-  }
-
-  // Limit Fehler gerade neu aufgetreten
-  if( LimitErrInput.statusChangedOn()){
-    IoStatus = false;
-  }
-
   LimitErrStatus = LimitErrInput.getStatus(); // evtl invertieren, falls Öffner als Limitschalter genutzt werden.
 
+  // Jeder der oberen Fehler schaltet IOStatus aus
+  if( NotausErrStatus || PHErrStatus || XyzErrStatus || LimitErrStatus) {
+    InternEnableStatus = false;
+  }
+
+  // LimitErr an Mach melden
   LimitErrRly.setStatus(LimitErrStatus ? OUTPUT_ON : OUTPUT_OFF);
 
+  // LimitOvrd an Mach melden
   LimitOvrdRly.setStatus(LimitOvrdInput.getStatus() ? OUTPUT_ON : OUTPUT_OFF);
 
 
-  //Enable setzen
-  EnableRly.setStatus( IoStatus ? OUTPUT_ON : OUTPUT_OFF);
+  //Enable an Mach melden
+  EnableRly.setStatus( InternEnableStatus ? OUTPUT_ON : OUTPUT_OFF);
 
 
   // Leds setzen
@@ -286,7 +291,10 @@ void loop() {
   XyzErrLed.setStatus( XyzErrStatus ? OUTPUT_BLINK : OUTPUT_OFF);
   PhErrLed.setStatus( PHErrStatus ? OUTPUT_ON : OUTPUT_OFF);
   FuErrLed.setStatus( FuErrStatus ? OUTPUT_ON : OUTPUT_OFF);
-  EnableLed.setStatus( IoStatus ? OUTPUT_ON : OUTPUT_OFF);
+
+
+
+  EnableLed.setStatus( InternEnableStatus ? OUTPUT_ON : OUTPUT_OFF);
 
   // OUTPUTs updaten
 

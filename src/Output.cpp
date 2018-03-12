@@ -35,16 +35,18 @@ int Output::getStatus() {
 }
 
 void Output::setStatus( int s) {
-  status = s;
-  if( status == OUTPUT_BLINK_ONCE || status == OUTPUT_BLINK) {
-    endtime = millis() + (*pattern)[0];
+  if( s != status) {
+    status = s;
+    if( status == OUTPUT_BLINK_ONCE || status == OUTPUT_BLINK) {
+      endtime = millis() + (*pattern)[0];
+      position = 0;
+    }
   }
 }
 
 void Output::setPattern( int (*p)[20]) {
-  if( oldPattern != p) {
+  if( p != pattern) {
     pattern = p;
-    oldPattern = pattern;
     position = 0;
   }
 }
@@ -65,8 +67,8 @@ void Output::update() {
           }
         }
         endtime += (*pattern)[position];
-        digitalWrite( pin, ( position % 2 == 0) ? HIGH : LOW);
       }
+      digitalWrite( pin, ( position % 2 == 0) ? HIGH : LOW);
       break;
     case OUTPUT_OFF:
       digitalWrite( pin, LOW);

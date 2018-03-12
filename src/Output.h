@@ -10,7 +10,6 @@ class Output {
   int pin;
   int status; // OFF, ON, BLINK
   int (*pattern)[20];
-  int (*oldPattern)[20];
   int position; // wo in pattern
   unsigned long endtime; // wann weiter im pattern
 
