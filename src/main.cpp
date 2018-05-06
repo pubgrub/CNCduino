@@ -214,6 +214,7 @@ void setup() {
     EnableLed.setPattern( &OneLongBlink);
     LimitErrRly.attach(LIMIT_ERR_RLY);
     LimitOvrdRly.attach(LIMIT_OVRD_RLY);
+    LimitOvrdRly.setPattern(&OneLongBlink);
 
     // TimestampStart = millis();
     // int oneSecBlink[20] = { 1000, 0};
@@ -276,12 +277,25 @@ void loop() {
   // LimitErr an Mach melden
   LimitErrRly.setStatus(LimitErrStatus ? OUTPUT_ON : OUTPUT_OFF);
 
-  // LimitOvrd an Mach melden
-  LimitOvrdRly.setStatus(LimitOvrdInput.getStatus() ? OUTPUT_ON : OUTPUT_OFF);
+  // Limit Override Status setzen
+  // und an mach senden (einmal "blinken")
+  if( LimitErrStatus && LimitOvrdInput.statusChangedOn() ) {
+    LimitErrOvrdStatus = true;
+    LimitOvrdRly.setStatus( OUTPUT_BLINK_ONCE);
+  }
+
+  // LimitErr weg? Ovrd weg!
+  if( LimitErrStatus == false) {
+    LimitErrOvrdStatus = false;
+  }
+
+
 
 
   //Enable an Mach melden
   EnableRly.setStatus( InternEnableStatus ? OUTPUT_ON : OUTPUT_OFF);
+
+
 
 
   // Leds setzen
@@ -289,12 +303,13 @@ void loop() {
     XyzErrLed.setPattern( (int(*)[20]) Blinks[ XyzErrValue]);
   }
   XyzErrLed.setStatus( XyzErrStatus ? OUTPUT_BLINK : OUTPUT_OFF);
+
   PhErrLed.setStatus( PHErrStatus ? OUTPUT_ON : OUTPUT_OFF);
   FuErrLed.setStatus( FuErrStatus ? OUTPUT_ON : OUTPUT_OFF);
 
 
 
-  EnableLed.setStatus( InternEnableStatus ? OUTPUT_ON : OUTPUT_OFF);
+  EnableLed.setStatus( MachOkStatus.getStatus() ? OUTPUT_ON : OUTPUT_OFF);
 
   // OUTPUTs updaten
 
