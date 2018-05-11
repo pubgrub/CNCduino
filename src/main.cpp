@@ -6,7 +6,8 @@
 #include <InputList.h>
 #include <OutputList.h>
 
-#define DEBUG 1
+#define DEBUG 0
+#define CALC_SPEED 1
 
 // LEDs definieren
 
@@ -131,7 +132,8 @@ long TimestampStart;
 bool isInitialized;
 long NextDebugOutput;
 long DebugInterval;
-
+long Loops;
+char buffer[80];
 
 
 // void ioStatusUpdate( int status);
@@ -226,6 +228,7 @@ void setup() {
     TimestampStart = millis();
     NextDebugOutput = TimestampStart;
     DebugInterval = 1000;
+    Loops = 0;
 
     // int oneSecBlink[20] = { 1000, 0};
     // XyzResetRly.setPattern( &oneSecBlink);
@@ -363,7 +366,6 @@ void loop() {
 
   if( DEBUG && (millis() > NextDebugOutput) ) {
 
-    char buffer[80];
     sprintf( buffer, "Zeitstempel: %ld", millis());
     Serial.println( buffer);
     sprintf( buffer, "LimErrSts   : %1d LimErrOvrSts: %1d LimOvrMchSts: %1d", LimitErrStatus, LimitErrOvrdStatus, LimitOvrdMachStatus);
@@ -375,8 +377,14 @@ void loop() {
     sprintf( buffer, "IntEnableSts: %1d IntLimEnaSts: %1d MachOkSts   : %1d", InternEnableStatus, InternLimitOvrdEnableStatus, MachOkStatus);
     Serial.println( buffer);
     NextDebugOutput += DebugInterval;
+  }
 
-
+  Loops++;
+  if( CALC_SPEED && (millis() > NextDebugOutput) ) {
+    NextDebugOutput += DebugInterval;
+    sprintf( buffer, "loops/s %d", Loops);
+    Serial.println( buffer);
+    Loops = 0;
   }
 
 }
