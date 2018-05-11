@@ -6,6 +6,8 @@
 #include <InputList.h>
 #include <OutputList.h>
 
+#define DEBUG 1
+
 // LEDs definieren
 
 #define ENABLE_LED CONTROLLINO_D0
@@ -31,7 +33,7 @@
 #define Y_ERR_SW CONTROLLINO_A10
 #define Z_ERR_SW CONTROLLINO_A11
 #define NOTAUS_SW CONTROLLINO_A13
-#define MACH_OK_STATUS CONTROLLINO_A14
+#define MACH_OK_STATUS CONTROLLINO_A15
 
 // Relays definieren
 
@@ -65,10 +67,10 @@ Output LimitErrRly;          // Output von Limit-Error-Status an Mach
 Output LimitOvrdRly;         // Output von Limit-Error-Ovrd-Status an Mach
 Input LimitOvrdInput;        // Status von Limit_Error-Ovrd-Button
 Input LimitErrInput;         // Status von Limit-Error-Switch
-Input LimitOvrdMachStatus;   // Input von Limit-Ovrd-Status aus Mach
+Input LimitOvrdMachInput;    // Input von Limit-Ovrd-Status aus Mach
 bool LimitErrStatus;         // Interner Status von Limit-Error (extra, weil Limit-Sw Öffner oder Schließer sein kann)
 bool LimitErrOvrdStatus;     // Interner Status des Limit-Overrides
-
+bool LimitOvrdMachStatus;    // Interner Status des Mach Ovrd Signals
 
 // Alle Variablen, die mit XYZ-Fehlern zu tun haben
 
@@ -106,10 +108,12 @@ bool FuErrStatus;            // Echter Status des FU-Fehler (nach Prio-Fehler-Ch
 // Alle Variablen, die mit dem Enable / Reset System zu tun haben
 
 bool InternEnableStatus;      // Interner "Enable"-Status
+bool InternLimitOvrdEnableStatus; // System ist im LimOvrd Modus und "ON"-Switch wurde gedrückt
 Output EnableLed;             // Weiße LED im "ON"-Switch
 Input EnableOnInput;          // Status des weißen "ON"-Switches
 Input EnableOffInput;         // Status des schwarzen "OFF"-Switches
-Input MachOkStatus;           // "Reset"-Status aus Mach
+Input MachOkInput;           // "Reset"-Status aus Mach
+bool MachOkStatus;
 Output EnableRly;             // "Enable"-Signal an Mach
 
 
@@ -120,10 +124,13 @@ extern int *Blinks[8];
 bool PriorityErrorStatus; // PH oder Notaus, haben Vorrang und disablen die anderen Errors
 
 
+
 // Timing Startup
 
-int TimestampStart;
+long TimestampStart;
 bool isInitialized;
+long NextDebugOutput;
+long DebugInterval;
 
 
 
@@ -137,7 +144,7 @@ bool isInitialized;
 void setup() {
 
     // put your setup code here, to run once:
-    Serial.begin(9600);
+    Serial.begin(38400);
 
     // for( int i = 0; i < 8; i++) {
     //   int *b = Blinks[i];
@@ -196,8 +203,8 @@ void setup() {
     YErrInput.attach( Y_ERR_SW);
     ZErrInput.attach( Z_ERR_SW);
     LimitErrInput.attach( LIMIT_ERR_SW);
-    LimitOvrdMachStatus.attach( LIMIT_OVRD_STATUS);
-    MachOkStatus.attach(MACH_OK_STATUS);
+    LimitOvrdMachInput.attach( LIMIT_OVRD_STATUS);
+    MachOkInput.attach(MACH_OK_STATUS);
 
     // OUTPUTs
 
@@ -216,7 +223,10 @@ void setup() {
     LimitOvrdRly.attach(LIMIT_OVRD_RLY);
     LimitOvrdRly.setPattern(&OneLongBlink);
 
-    // TimestampStart = millis();
+    TimestampStart = millis();
+    NextDebugOutput = TimestampStart;
+    DebugInterval = 1000;
+
     // int oneSecBlink[20] = { 1000, 0};
     // XyzResetRly.setPattern( &oneSecBlink);
     // XyzResetRly.setStatus(OUTPUT_BLINK_ONCE);
@@ -240,10 +250,14 @@ void loop() {
   // Wenn ja, erstmal einschalten, und falls Fehler aktiv, wird vor update wieder ausgeschalten
   if( EnableOnInput.statusChangedOn()) {
     InternEnableStatus = true;
+    if( LimitOvrdMachStatus) {
+      InternLimitOvrdEnableStatus = true;
+    }
   }
 
   if( ! EnableOffInput.getStatus()) { // Öffner, Normal HIGH
     InternEnableStatus = false;
+    InternLimitOvrdEnableStatus = false;
   }
 
   // Update wirkliche Fehler-Status
@@ -270,16 +284,22 @@ void loop() {
   LimitErrStatus = LimitErrInput.getStatus(); // evtl invertieren, falls Öffner als Limitschalter genutzt werden.
 
   // Jeder der oberen Fehler schaltet IOStatus aus
-  if( NotausErrStatus || PHErrStatus || XyzErrStatus || LimitErrStatus) {
+  if( LimitErrStatus) {
     InternEnableStatus = false;
   }
+  if( NotausErrStatus || PHErrStatus || XyzErrStatus) {
+    InternEnableStatus = false;
+    InternLimitOvrdEnableStatus = false;
+  }
+
+
 
   // LimitErr an Mach melden
   LimitErrRly.setStatus(LimitErrStatus ? OUTPUT_ON : OUTPUT_OFF);
 
   // Limit Override Status setzen
   // und an mach senden (einmal "blinken")
-  if( LimitErrStatus && LimitOvrdInput.statusChangedOn() ) {
+  if( LimitErrStatus && LimitOvrdInput.statusChangedOn() && ! LimitErrOvrdStatus) {
     LimitErrOvrdStatus = true;
     LimitOvrdRly.setStatus( OUTPUT_BLINK_ONCE);
   }
@@ -287,16 +307,17 @@ void loop() {
   // LimitErr weg? Ovrd weg!
   if( LimitErrStatus == false) {
     LimitErrOvrdStatus = false;
+    InternLimitOvrdEnableStatus = false;
   }
 
-
+  // Hat Mach den Limit Ovrd mitbekommen?
+  LimitOvrdMachStatus = ! LimitOvrdMachInput.getStatus();
 
 
   //Enable an Mach melden
-  EnableRly.setStatus( InternEnableStatus ? OUTPUT_ON : OUTPUT_OFF);
+  EnableRly.setStatus( InternEnableStatus || InternLimitOvrdEnableStatus ? OUTPUT_ON : OUTPUT_OFF);
 
-
-
+  MachOkStatus = ! MachOkInput.getStatus();
 
   // Leds setzen
   if( XyzErrStatus) {
@@ -309,10 +330,53 @@ void loop() {
 
 
 
-  EnableLed.setStatus( MachOkStatus.getStatus() ? OUTPUT_ON : OUTPUT_OFF);
+  if( MachOkStatus) {
+    if( InternLimitOvrdEnableStatus) {
+      EnableLed.setStatus( OUTPUT_BLINK);
+    } else {
+      EnableLed.setStatus( OUTPUT_ON);
+    }
+  } else {
+    EnableLed.setStatus( OUTPUT_OFF);
+  }
 
+  if( LimitErrStatus) {
+    if( LimitErrOvrdStatus) {
+      if( InternLimitOvrdEnableStatus) {
+        LimitErrLedRed.setStatus( OUTPUT_BLINK);
+        LimitErrLedGreen.setStatus( OUTPUT_OFF);
+      } else {
+        LimitErrLedRed.setStatus( OUTPUT_ON);
+        LimitErrLedGreen.setStatus( OUTPUT_OFF);
+      }
+    } else {
+      LimitErrLedRed.setStatus( OUTPUT_ON);
+      LimitErrLedGreen.setStatus( OUTPUT_ON);
+    }
+  } else {
+    LimitErrLedRed.setStatus( OUTPUT_OFF);
+    LimitErrLedGreen.setStatus( OUTPUT_OFF);
+  }
   // OUTPUTs updaten
 
   outputList.update();
+
+  if( DEBUG && (millis() > NextDebugOutput) ) {
+
+    char buffer[80];
+    sprintf( buffer, "Zeitstempel: %ld", millis());
+    Serial.println( buffer);
+    sprintf( buffer, "LimErrSts   : %1d LimErrOvrSts: %1d LimOvrMchSts: %1d", LimitErrStatus, LimitErrOvrdStatus, LimitOvrdMachStatus);
+    Serial.println( buffer);
+    sprintf( buffer, "XYZErrSts   : %1d XYZErrValue : %1d XYZResetSts : %1d", XyzErrStatus, XyzErrValue, XyzResetStatus);
+    Serial.println( buffer);
+    sprintf( buffer, "PhaErrSts   : %1d NotausErrSts: %1d FUErrSts    : %1d", PHErrStatus, NotausErrStatus, FuErrStatus);
+    Serial.println( buffer);
+    sprintf( buffer, "IntEnableSts: %1d IntLimEnaSts: %1d MachOkSts   : %1d", InternEnableStatus, InternLimitOvrdEnableStatus, MachOkStatus);
+    Serial.println( buffer);
+    NextDebugOutput += DebugInterval;
+
+
+  }
 
 }
